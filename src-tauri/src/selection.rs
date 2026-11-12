@@ -80,7 +80,7 @@ pub fn capture() -> Result<String, SelectionError> {
         // intact while the user is still releasing the hotkey. A silent copy
         // (nothing selected) then leaves the clipboard empty and is detectable.
         clipboard.clear().map_err(clipboard_error)?;
-        send_shortcut(Key::C)?;
+        send_shortcut(COPY_KEY)?;
         poll_text(&mut clipboard)
     })();
 
@@ -100,7 +100,7 @@ pub fn replace(text: &str) -> Result<(), SelectionError> {
     let result = (|| {
         wait_for_modifiers_released();
         clipboard.set_text(text).map_err(clipboard_error)?;
-        send_shortcut(Key::V)?;
+        send_shortcut(PASTE_KEY)?;
         // Give the target app time to read the clipboard before restoring it.
         sleep(PASTE_SETTLE);
         Ok(())
@@ -165,6 +165,18 @@ fn send_shortcut(key: Key) -> Result<(), SelectionError> {
     let _ = enigo.key(modifier, Direction::Release);
     pressed.map_err(input_error)
 }
+
+/// `enigo` exposes letter key variants only on Windows. Elsewhere the Unicode
+/// form is mapped to a layout-dependent keycode.
+#[cfg(target_os = "windows")]
+const COPY_KEY: Key = Key::C;
+#[cfg(not(target_os = "windows"))]
+const COPY_KEY: Key = Key::Unicode('c');
+
+#[cfg(target_os = "windows")]
+const PASTE_KEY: Key = Key::V;
+#[cfg(not(target_os = "windows"))]
+const PASTE_KEY: Key = Key::Unicode('v');
 
 /// Waits until the hotkey modifiers are released, so `Ctrl+C` is not sent as
 /// `Ctrl+Alt+C` while the user is still holding the shortcut.
