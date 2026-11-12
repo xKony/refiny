@@ -77,6 +77,8 @@ cargo test -p refiny-core
 cargo tauri dev
 ```
 
+The frontend is embedded at build time, so `cargo run -p refiny` also launches the app without the Tauri CLI — useful for a quick smoke test.
+
 The settings window includes a **Try the pipeline** box that calls the configured provider directly. Pressing the hotkey shows the overlay with a placeholder error until selection capture lands.
 
 ## Project layout
