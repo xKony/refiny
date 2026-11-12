@@ -15,8 +15,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 refiny-core = { path = "../crates/refiny-core" }
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
 arboard = "3"
 enigo = "0.6"
 device_query = "4"

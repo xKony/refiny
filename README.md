@@ -8,7 +8,7 @@ Refiny is an open-source desktop companion for people whose thoughts move faster
 
 [Read the whitepaper](docs/whitepaper.md) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
 
-> **Status: pre-alpha.** The hotkey, overlay, provider pipeline, and selection capture/replacement work end to end on Windows. macOS and Linux are compile-verified; runtime verification is the next milestone.
+> **Status: pre-alpha.** The hotkey, overlay, provider pipeline, selection capture/replacement, and tray lifecycle work end to end on Windows. macOS and Linux are compile-verified; runtime verification is the next milestone.
 
 ## Why
 
@@ -24,6 +24,8 @@ It is built for messy first drafts — lowercase fragments, missing punctuation,
 4. The selection is replaced in place.
 
 If anything fails, the original text is left untouched and the previous clipboard contents are restored.
+
+Refiny keeps running in the system tray. Closing the settings window hides it instead of quitting, so the hotkey keeps working; use **Quit** in the tray menu to exit. Launching the app again restores the existing window.
 
 ## What it preserves
 
@@ -92,7 +94,7 @@ docs/                 Whitepaper, architecture, ADRs
 
 ## Roadmap
 
-- [ ] **v0.1 — Windows MVP:** hotkey, overlay, and selection capture/replace done; tray and onboarding pending
+- [ ] **v0.1 — Windows MVP:** hotkey, overlay, selection capture/replace, and tray lifecycle done; onboarding pending
 - [ ] **v0.2 — Cross-platform:** macOS and Linux (X11), permissions, packaging
 - [ ] **v0.3 — Mascot and control:** animated mascot set, cancel, history, prompt presets
 - [ ] **v1.0 — Distribution:** installers, signing, auto-update

@@ -15,5 +15,6 @@ The vocabulary Refiny uses in code, issues, and documentation. Prefer these term
 | **Mixed-language input** | Text containing spans in more than one natural language; each span keeps its language. | Multilingual mode |
 | **Provider** | Any OpenAI-compatible chat-completions endpoint. | Backend, API |
 | **Overlay** | Transparent always-on-top window shown during a polish action. | Popup, HUD |
+| **Tray** | System status-area icon that keeps Refiny running when the settings window is hidden. | Notification area, menu bar icon |
 | **Mascot** | The animated low-poly character in the overlay. | Avatar, spinner |
 | **Hotkey** | System-wide keyboard shortcut that starts a polish action. | Shortcut, keybind |

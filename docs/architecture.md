@@ -1,15 +1,15 @@
 # Architecture
 
-Status: pre-alpha. The core pipeline, hotkey, overlay, and selection capture/replace are implemented. Windows is runtime-verified; macOS and Linux are compile-verified.
+Status: pre-alpha. The core pipeline, hotkey, overlay, selection capture/replace, and tray lifecycle are implemented. Windows is runtime-verified; macOS and Linux are compile-verified.
 
 ## Process model
 
-A single user-level Tauri application. The Rust backend owns the hotkey, configuration, provider calls, and window management. Two webview windows share one static frontend:
+A single user-level Tauri application, enforced by the single-instance plugin: launching a second copy restores the first window and exits. The Rust backend owns the hotkey, configuration, provider calls, and window management. Two webview windows share one static frontend:
 
 - **main** — settings, status, and a manual "try the pipeline" box.
 - **overlay** — transparent, always-on-top mascot shown during a polish action.
 
-No admin rights, no system service. Tray integration and startup-at-login are planned.
+A tray icon keeps the hotkey alive after the settings window is closed. Closing **main** hides it; **Open settings** (or a left-click on the icon) restores it; **Quit** exits the process. On macOS, `RunEvent::Reopen` also restores **main** when the dock icon is clicked. No admin rights, no system service. Startup-at-login and onboarding are planned.
 
 ## Data flow
 
@@ -27,11 +27,11 @@ Capture runs before the overlay is shown, so the overlay can never take focus aw
 | Path | Responsibility | Status |
 | --- | --- | --- |
 | `crates/refiny-core` | Config, prompt builder, provider client. No UI or OS code. | tested |
-| `src-tauri/src/lib.rs` | Tauri builder, plugin registration, hotkey setup. | implemented |
+| `src-tauri/src/lib.rs` | Tauri builder, plugin registration, hotkey setup, close-to-tray. | implemented |
 | `src-tauri/src/commands.rs` | Commands and the polish action pipeline. | implemented |
 | `src-tauri/src/state.rs` | Config path resolution and shared state. | implemented |
 | `src-tauri/src/selection.rs` | Platform boundary for capture and replace. | implemented |
-| `src-tauri/src/tray.rs` | Tray icon and menu. | planned |
+| `src-tauri/src/tray.rs` | Tray icon, tray menu, and window restoration. | implemented |
 | `src/` | Static frontend: settings and overlay. | implemented |
 
 ## Platform implementation notes
@@ -55,7 +55,7 @@ Capture runs before the overlay is shown, so the overlay can never take focus aw
 
 - X11: global hotkeys and synthetic input work through XTest; `enigo` and the global-shortcut plugin support this.
 - Wayland: compositors generally block global hotkeys and synthetic input. Treat Linux as best-effort and document the limitation. A future fallback can be a manual "copy, polish, paste" flow.
-- Packaging needs WebKitGTK, `libappindicator`, and `librsvg2`.
+- Packaging needs WebKitGTK, `libappindicator` (or `libayatana-appindicator`), and `librsvg2`. Without an appindicator package the tray icon fails to build and the app exits at startup.
 
 ## Failure taxonomy
 
@@ -86,5 +86,5 @@ No background retries: a retry could paste stale text into a different context.
 
 - Clipboard round-trip vs. accessibility-API capture (UI Automation, AXUIElement, AT-SPI).
 - Wayland fallback behavior.
-- Tray menu shape and first-run onboarding.
+- First-run onboarding, autostart, and hotkey customization UI.
 - Auto-update mechanism and code signing.
