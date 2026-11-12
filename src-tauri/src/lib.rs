@@ -43,7 +43,7 @@ pub fn run() {
         })
         .setup(|app| {
             let handle = app.handle().clone();
-            let (config, config_path) = state::load_config(&handle)?;
+            let (config, config_path, first_run) = state::load_config(&handle)?;
 
             let shortcut: Shortcut = config.hotkey.parse().map_err(|error| {
                 Box::<dyn std::error::Error>::from(format!(
@@ -57,7 +57,7 @@ pub fn run() {
             // Manage the state before any window exists. Tauri normally builds
             // config windows before the setup closure runs, which lets the
             // frontend call commands before `AppState` is managed.
-            app.manage(state::AppState::new(config, config_path));
+            app.manage(state::AppState::new(config, config_path, first_run));
 
             for window_config in app.config().app.windows.clone() {
                 tauri::WebviewWindowBuilder::from_config(app.handle(), &window_config)?.build()?;

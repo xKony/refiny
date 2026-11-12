@@ -50,10 +50,11 @@ pub struct ConfigView {
     pub preserve: Vec<String>,
     pub mascot: String,
     pub config_path: String,
+    pub first_run: bool,
 }
 
 impl ConfigView {
-    fn from_config(config: &Config, config_path: &std::path::Path) -> Self {
+    fn from_config(config: &Config, config_path: &std::path::Path, first_run: bool) -> Self {
         Self {
             version: env!("CARGO_PKG_VERSION").to_string(),
             hotkey: config.hotkey.clone(),
@@ -65,13 +66,14 @@ impl ConfigView {
             preserve: config.preserve.clone(),
             mascot: config.mascot.clone(),
             config_path: config_path.display().to_string(),
+            first_run,
         }
     }
 }
 
 #[tauri::command]
 pub fn get_config(state: tauri::State<'_, AppState>) -> ConfigView {
-    ConfigView::from_config(&state.config, &state.config_path)
+    ConfigView::from_config(&state.config, &state.config_path, state.first_run)
 }
 
 #[tauri::command]

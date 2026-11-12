@@ -19,6 +19,44 @@
         <span class="badge">pre-alpha</span>
       </header>
 
+      <section class="card setup-card" id="setup" hidden aria-labelledby="setup-title">
+        <div class="setup-heading">
+          <h2 id="setup-title">Welcome to Refiny</h2>
+          <button class="link-button" id="dismiss-setup" type="button">Dismiss</button>
+        </div>
+        <ol class="setup-steps">
+          <li>
+            <strong>Connect a provider</strong>
+            <p>
+              The API key is read from an environment variable — it is never written to
+              <code>config.toml</code>.
+            </p>
+            <pre><code id="setup-command">setx REFINY_API_KEY "sk-..."</code></pre>
+            <p class="hint">
+              Restart Refiny after setting it. Local endpoints such as Ollama or LM Studio usually
+              need no key; edit <code>config.toml</code> to point at one.
+            </p>
+          </li>
+          <li>
+            <strong>Polish anything</strong>
+            <p>
+              Select text in any app and press <kbd id="setup-hotkey">Ctrl+Alt+P</kbd>. The polished
+              text replaces the selection.
+            </p>
+          </li>
+          <li>
+            <strong>Leave it running</strong>
+            <p>
+              Closing this window keeps Refiny in the tray. Use the tray menu to reopen it or quit.
+            </p>
+          </li>
+        </ol>
+        <div class="actions">
+          <button id="recheck" class="primary" type="button">Recheck configuration</button>
+          <span id="setup-status" class="result-status" role="status"></span>
+        </div>
+      </section>
+
       <section class="card status-card" aria-label="Configuration status">
         <div class="status-row">
           <span class="label">Hotkey</span>
@@ -41,7 +79,7 @@
           <span class="hint">Ctrl/Cmd + Enter</span>
         </div>
         <p class="hint">
-          This calls the configured provider directly. Global selection capture is the next milestone.
+          This calls the configured provider directly, using the same pipeline as the hotkey.
         </p>
         <textarea id="input" rows="6" spellcheck="false" placeholder="helo wrld this is  a test"></textarea>
         <div class="actions">

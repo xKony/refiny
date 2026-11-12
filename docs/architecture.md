@@ -1,6 +1,6 @@
 # Architecture
 
-Status: pre-alpha. The core pipeline, hotkey, overlay, selection capture/replace, and tray lifecycle are implemented. Windows is runtime-verified; macOS and Linux are compile-verified.
+Status: pre-alpha. The core pipeline, hotkey, overlay, selection capture/replace, tray lifecycle, and first-run setup are implemented. Windows is runtime-verified; macOS and Linux are compile-verified.
 
 ## Process model
 
@@ -9,7 +9,9 @@ A single user-level Tauri application, enforced by the single-instance plugin: l
 - **main** — settings, status, and a manual "try the pipeline" box.
 - **overlay** — transparent, always-on-top mascot shown during a polish action.
 
-A tray icon keeps the hotkey alive after the settings window is closed. Closing **main** hides it; **Open settings** (or a left-click on the icon) restores it; **Quit** exits the process. On macOS, `RunEvent::Reopen` also restores **main** when the dock icon is clicked. No admin rights, no system service. Startup-at-login and onboarding are planned.
+A tray icon keeps the hotkey alive after the settings window is closed. Closing **main** hides it; **Open settings** (or a left-click on the icon) restores it; **Quit** exits the process. On macOS, `RunEvent::Reopen` also restores **main** when the dock icon is clicked. No admin rights, no system service. Startup-at-login is planned.
+
+On first run the backend reports `first_run` (the config file did not exist) and the settings UI shows a setup panel: how to set the API-key environment variable, what the hotkey does, and that the app lives in the tray. The panel also appears whenever the configured key is missing and stays dismissable, so a local provider without a key is not nagged.
 
 ## Data flow
 
@@ -32,7 +34,7 @@ Capture runs before the overlay is shown, so the overlay can never take focus aw
 | `src-tauri/src/state.rs` | Config path resolution and shared state. | implemented |
 | `src-tauri/src/selection.rs` | Platform boundary for capture and replace. | implemented |
 | `src-tauri/src/tray.rs` | Tray icon, tray menu, and window restoration. | implemented |
-| `src/` | Static frontend: settings and overlay. | implemented |
+| `src/` | Static frontend: settings, setup panel, and overlay. | implemented |
 
 ## Platform implementation notes
 
@@ -86,5 +88,5 @@ No background retries: a retry could paste stale text into a different context.
 
 - Clipboard round-trip vs. accessibility-API capture (UI Automation, AXUIElement, AT-SPI).
 - Wayland fallback behavior.
-- First-run onboarding, autostart, and hotkey customization UI.
+- First-run onboarding beyond the setup panel, autostart, and a hotkey picker.
 - Auto-update mechanism and code signing.

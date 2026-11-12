@@ -40,9 +40,9 @@ Default flow:
 4. Refiny captures the selection, polishes it, and replaces it in place.
 5. The overlay fades; the caret and undo history behave as if the user typed the result.
 
-`Esc` cancels. If capture, the provider call, or replacement fails, the overlay shows a short error and the original text remains untouched. The previous clipboard contents are restored after every action.
+`Esc` will cancel; cancellation is not implemented yet. If capture, the provider call, or replacement fails, the overlay shows a short error and the original text remains untouched. The previous clipboard contents are restored after every action.
 
-First run: choose a provider, paste an API key (stored in an environment variable), pick a mascot, and optionally edit the prompt.
+First run: a setup panel explains how to set the API-key environment variable, shows the hotkey, and notes that Refiny keeps running in the tray. The provider, model, prompt, and preservation list stay in `config.toml`.
 
 ## 4. The transformation contract
 
@@ -83,7 +83,7 @@ Components:
 - **Selection service** — captures the current selection and replaces it; the platform boundary.
 - **Prompt builder** — merges the user's prompt template with the preservation list (`refiny-core`).
 - **Provider client** — calls any OpenAI-compatible `/chat/completions` endpoint (`refiny-core`).
-- **Overlay** — transparent, always-on-top webview with the mascot, cancel, and error states.
+- **Overlay** — transparent, always-on-top webview with the mascot; cancel and error states.
 - **Config store** — per-user TOML file; secrets come from environment variables.
 
 The `refiny-core` crate contains no UI or OS code, so the transformation contract can be tested on any machine.

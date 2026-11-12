@@ -8,7 +8,7 @@ Refiny is an open-source desktop companion for people whose thoughts move faster
 
 [Read the whitepaper](docs/whitepaper.md) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
 
-> **Status: pre-alpha.** The hotkey, overlay, provider pipeline, selection capture/replacement, and tray lifecycle work end to end on Windows. macOS and Linux are compile-verified; runtime verification is the next milestone.
+> **Status: pre-alpha.** The hotkey, overlay, provider pipeline, selection capture/replacement, tray lifecycle, and first-run setup work end to end on Windows. macOS and Linux are compile-verified; runtime verification is the next milestone.
 
 ## Why
 
@@ -67,6 +67,8 @@ api_key_env = "REFINY_API_KEY"
 
 The prompt is the system prompt. Leave it empty to use the built-in default. The preservation list is appended automatically. Secrets are read from the environment variable named by `provider.api_key_env` — never from the config file.
 
+On first run Refiny shows a short setup panel with the exact command to set that variable on your platform. Set it before launching the app; the panel rechecks the configuration on demand.
+
 Any OpenAI-compatible endpoint works. Point `provider.base_url` at Ollama or LM Studio to keep text local.
 
 ## Build
@@ -94,7 +96,7 @@ docs/                 Whitepaper, architecture, ADRs
 
 ## Roadmap
 
-- [ ] **v0.1 — Windows MVP:** hotkey, overlay, selection capture/replace, and tray lifecycle done; onboarding pending
+- [ ] **v0.1 — Windows MVP:** hotkey, overlay, selection capture/replace, tray lifecycle, and first-run setup done
 - [ ] **v0.2 — Cross-platform:** macOS and Linux (X11), permissions, packaging
 - [ ] **v0.3 — Mascot and control:** animated mascot set, cancel, history, prompt presets
 - [ ] **v1.0 — Distribution:** installers, signing, auto-update
