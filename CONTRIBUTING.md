@@ -9,7 +9,7 @@ Thanks for helping make Refiny better. The project is pre-alpha, so the best con
 - **Platform dependencies:**
   - **Windows:** WebView2 (preinstalled on Windows 11) and the MSVC build tools.
   - **macOS:** Xcode Command Line Tools.
-  - **Linux:** `webkit2gtk-4.1`, `libappindicator3`, `librsvg2`, and `patchelf`. See the Tauri prerequisites guide for your distribution.
+  - **Linux:** `webkit2gtk-4.1`, an appindicator package (either `libappindicator3-dev` or its `libayatana-appindicator3-dev` fork), `librsvg2`, `libx11-dev`, and `patchelf`. See the Tauri prerequisites guide for your distribution.
 - **`gh`** for issue work (optional).
 
 ## Build and test
