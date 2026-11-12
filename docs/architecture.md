@@ -49,7 +49,7 @@ Today, step 2 returns `SelectionError::NotImplemented`; the hotkey still exercis
 - Synthetic input requires the user to grant Accessibility permission (System Settings → Privacy & Security → Accessibility).
 - The app must be signed and notarized for distribution outside the App Store.
 - Use `CGEvent` for copy/paste; `enigo` wraps this.
-- Transparent windows require `macOSPrivateApi` in the Tauri config.
+- Transparent windows work out of the box on Tauri 2.12.1+; the old `macOSPrivateApi` flag is a no-op there and requires a crate feature if set.
 
 ### Linux
 
