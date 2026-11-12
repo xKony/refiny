@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Refiny</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">R</span>
+          <div>
+            <h1>Refiny</h1>
+            <p class="tagline">Select text. Hit a hotkey. Get polished writing.</p>
+          </div>
+        </div>
+        <span class="badge">pre-alpha</span>
+      </header>
+
+      <section class="card status-card" aria-label="Configuration status">
+        <div class="status-row">
+          <span class="label">Hotkey</span>
+          <kbd id="hotkey">—</kbd>
+        </div>
+        <div class="status-row">
+          <span class="label">Provider</span>
+          <span id="provider" class="value">—</span>
+        </div>
+        <div class="status-row">
+          <span class="label">API key</span>
+          <span id="api-key" class="value">—</span>
+        </div>
+        <p class="hint config-path" id="config-path"></p>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <h2>Try the pipeline</h2>
+          <span class="hint">Ctrl/Cmd + Enter</span>
+        </div>
+        <p class="hint">
+          This calls the configured provider directly. Global selection capture is the next milestone.
+        </p>
+        <textarea id="input" rows="6" spellcheck="false" placeholder="helo wrld this is  a test"></textarea>
+        <div class="actions">
+          <button id="polish" class="primary" type="button">Polish text</button>
+          <span id="result-status" class="result-status" role="status"></span>
+        </div>
+        <pre id="output" class="output" hidden></pre>
+      </section>
+
+      <footer>
+        <span>MIT · Refiny <span id="version">0.1.0</span></span>
+        <span>Edit <code>config.toml</code> to change the prompt, provider, hotkey, or preservation list.</span>
+      </footer>
+    </main>
+
+    <script src="main.js"></script>
+  </body>
+</html>

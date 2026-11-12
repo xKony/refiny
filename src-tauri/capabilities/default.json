@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Default capability for the Refiny windows",
+  "windows": ["main", "overlay"],
+  "permissions": ["core:default"]
+}

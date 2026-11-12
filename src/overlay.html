@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Refiny</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="overlay-body">
+    <div class="mascot-card" id="card" data-state="working">
+      <svg class="mascot" viewBox="0 0 200 200" role="img" aria-label="Low-poly corgi mascot">
+        <polygon class="ear ear-left" points="46,78 58,24 88,62" fill="#c97b3f" />
+        <polygon points="58,68 64,40 80,62" fill="#8f4f2a" />
+        <polygon class="ear ear-right" points="154,78 142,24 112,62" fill="#c97b3f" />
+        <polygon points="142,68 136,40 120,62" fill="#8f4f2a" />
+
+        <polygon points="42,78 100,54 158,78 152,132 100,164 48,132" fill="#e8a15b" />
+        <polygon points="42,78 100,54 100,96 52,104" fill="#f0b06d" />
+        <polygon points="158,78 100,54 100,96 148,104" fill="#d98f4c" />
+        <polygon points="52,104 100,96 100,138 62,128" fill="#e8a15b" />
+        <polygon points="148,104 100,96 100,138 138,128" fill="#d98f4c" />
+
+        <polygon points="72,116 128,116 120,146 100,154 80,146" fill="#f6e7d3" />
+        <polygon points="72,116 100,116 100,132 80,128" fill="#fbf1e4" />
+        <polygon points="91,120 109,120 100,131" fill="#2b211b" />
+
+        <circle cx="76" cy="94" r="5.5" fill="#2b211b" />
+        <circle cx="124" cy="94" r="5.5" fill="#2b211b" />
+        <circle cx="77.5" cy="92" r="1.6" fill="#fff7ee" />
+        <circle cx="125.5" cy="92" r="1.6" fill="#fff7ee" />
+
+        <polygon points="68,84 84,80 82,86" fill="#8f4f2a" opacity="0.55" />
+        <polygon points="132,84 116,80 118,86" fill="#8f4f2a" opacity="0.55" />
+
+        <circle cx="64" cy="116" r="7" fill="#f2b27a" opacity="0.5" />
+        <circle cx="136" cy="116" r="7" fill="#f2b27a" opacity="0.5" />
+
+        <path
+          class="tongue"
+          d="M92 142 Q100 156 108 142 Q108 152 100 158 Q92 152 92 142Z"
+          fill="#e06c7a"
+        />
+      </svg>
+      <p class="overlay-label" id="label">polishing…</p>
+    </div>
+
+    <script src="overlay.js"></script>
+  </body>
+</html>

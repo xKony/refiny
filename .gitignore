@@ -1,0 +1,19 @@
+# Rust / Tauri build output
+/target/
+/src-tauri/target/
+/src-tauri/gen/
+
+# Local configuration and secrets
+.env
+*.local.toml
+config.local.toml
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini

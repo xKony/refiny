@@ -1,0 +1,18 @@
+[package]
+name = "refiny-core"
+description = "Core text-polishing pipeline for Refiny"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+reqwest.workspace = true
+
+[dev-dependencies]
+httpmock = "0.7"
+tempfile = "3"
