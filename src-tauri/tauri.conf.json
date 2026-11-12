@@ -17,7 +17,8 @@
         "minWidth": 560,
         "minHeight": 480,
         "resizable": true,
-        "center": true
+        "center": true,
+        "create": false
       },
       {
         "label": "overlay",
@@ -31,7 +32,8 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "visible": false,
-        "focus": false
+        "focus": false,
+        "create": false
       }
     ],
     "security": {

@@ -33,7 +33,16 @@ pub fn run() {
             })?;
 
             app.global_shortcut().register(shortcut)?;
-            let _ = app.manage(state::AppState::new(config, config_path));
+
+            // Manage the state before any window exists. Tauri normally builds
+            // config windows before the setup closure runs, which lets the
+            // frontend call commands before `AppState` is managed.
+            app.manage(state::AppState::new(config, config_path));
+
+            for window_config in app.config().app.windows.clone() {
+                tauri::WebviewWindowBuilder::from_config(app.handle(), &window_config)?.build()?;
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())
