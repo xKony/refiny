@@ -61,8 +61,9 @@ docs: clarify Wayland limitations
 
 ## Issues and pull requests
 
-- Issues are tracked on GitHub. The triage labels are `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`.
+- Issues are tracked on GitHub, using the bug and feature templates. The triage labels are `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`.
 - Open an issue before a large change so the approach can be discussed.
+- Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
 - Keep pull requests focused on one logical change, with tests and documentation.
 - Describe the user-visible behavior and the failure modes you considered.
 

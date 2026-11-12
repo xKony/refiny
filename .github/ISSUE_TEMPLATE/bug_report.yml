@@ -1,0 +1,74 @@
+name: Bug report
+description: Something is broken or behaves unexpectedly.
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do not include API keys, private text, or other secrets.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behavior, including any error shown by the overlay or the settings window.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Select text in ...
+        2. Press the hotkey
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows 10
+        - Windows 11
+        - macOS
+        - Linux (X11)
+        - Linux (Wayland)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Refiny version or commit
+      placeholder: v0.1.0 or 68435ae
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - OpenAI
+        - OpenRouter
+        - Ollama
+        - LM Studio
+        - Other OpenAI-compatible endpoint
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: Foreground app
+      description: The app where the selection was made.
+      placeholder: VS Code, Chrome, Notepad, Slack, Terminal…
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or config
+      description: Paste relevant output. Redact keys, tokens, and private text.
+      render: text
