@@ -1,5 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 
 use refiny_core::Config;
 use tauri::Manager;
@@ -7,6 +9,8 @@ use tauri::Manager;
 pub struct AppState {
     pub config: Config,
     pub config_path: PathBuf,
+    /// True while a polish action is running; the hotkey is ignored then.
+    pub busy: Arc<AtomicBool>,
 }
 
 impl AppState {
@@ -14,6 +18,7 @@ impl AppState {
         Self {
             config,
             config_path,
+            busy: Arc::new(AtomicBool::new(false)),
         }
     }
 }

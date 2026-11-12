@@ -1,6 +1,6 @@
 # Architecture
 
-Status: pre-alpha. The core pipeline and Tauri shell are scaffolded; selection capture is stubbed.
+Status: pre-alpha. The core pipeline, hotkey, overlay, and selection capture/replace are implemented. Windows is runtime-verified; macOS and Linux are compile-verified.
 
 ## Process model
 
@@ -14,35 +14,35 @@ No admin rights, no system service. Tray integration and startup-at-login are pl
 ## Data flow
 
 1. **Hotkey pressed.** The Tauri global-shortcut handler checks that no action is in flight.
-2. **Capture.** Snapshot the clipboard, clear it, send the platform copy shortcut, poll for text (up to 300 ms), restore the snapshot.
+2. **Capture.** Snapshot the clipboard, clear it, wait for the hotkey modifiers to be released, send the platform copy shortcut, poll for text (up to 800 ms), restore the snapshot.
 3. **Prompt.** Build the system prompt from the user's template plus the preservation list.
 4. **Provider.** `POST {base_url}/chat/completions` with a system message and the selected text as the user message. Temperature 0. The whole action is bounded by `timeout_ms`.
-5. **Replace.** Put the result on the clipboard, send the platform paste shortcut, wait for the paste, restore the previous clipboard contents.
+5. **Replace.** Put the result on the clipboard, send the platform paste shortcut, wait 300 ms for the target app to consume it, restore the previous clipboard contents.
 6. **Overlay.** `idle → working → success | error → idle`.
 
-Today, step 2 returns `SelectionError::NotImplemented`; the hotkey still exercises the overlay and event pipeline, and the settings window can call the provider directly.
+Capture runs before the overlay is shown, so the overlay can never take focus away from the app that owns the selection. The overlay is non-activating (`focus: false`) for the same reason. Every path restores the clipboard snapshot, including failures.
 
 ## Workspace layout
 
 | Path | Responsibility | Status |
 | --- | --- | --- |
-| `crates/refiny-core` | Config, prompt builder, provider client. No UI or OS code. | scaffolded |
-| `src-tauri/src/lib.rs` | Tauri builder, plugin registration, hotkey setup. | scaffolded |
-| `src-tauri/src/commands.rs` | Commands and the polish action pipeline. | scaffolded |
-| `src-tauri/src/state.rs` | Config path resolution and shared state. | scaffolded |
-| `src-tauri/src/selection.rs` | Platform boundary for capture and replace. | stub |
+| `crates/refiny-core` | Config, prompt builder, provider client. No UI or OS code. | tested |
+| `src-tauri/src/lib.rs` | Tauri builder, plugin registration, hotkey setup. | implemented |
+| `src-tauri/src/commands.rs` | Commands and the polish action pipeline. | implemented |
+| `src-tauri/src/state.rs` | Config path resolution and shared state. | implemented |
+| `src-tauri/src/selection.rs` | Platform boundary for capture and replace. | implemented |
 | `src-tauri/src/tray.rs` | Tray icon and menu. | planned |
-| `src/` | Static frontend: settings and overlay. | scaffolded |
+| `src/` | Static frontend: settings and overlay. | implemented |
 
 ## Platform implementation notes
 
 ### Windows
 
 - **Hotkey.** Tauri's global-shortcut plugin uses `RegisterHotKey` under the hood on a dedicated message loop.
-- **Synthetic input.** Use `SendInput` with explicit key-down/key-up events. `enigo` is the planned wrapper.
-- **Clipboard.** `OpenClipboard` can fail transiently; retry with backoff. Preserve at least `CF_UNICODETEXT` and restore it afterwards. `arboard` is the planned wrapper.
+- **Synthetic input.** `enigo` sends `SendInput` events with explicit key-down/key-up transitions.
+- **Clipboard.** `arboard` handles text and image snapshots. The clipboard is cleared before capture so a silent copy (nothing selected) is detectable, then restored afterwards.
 - **Elevation.** User Interface Privilege Isolation blocks synthetic input into elevated windows. Detect the foreground window's integrity level and fail with a clear message instead of retrying.
-- **Timing.** Allow ~50 ms between modifier transitions; poll the clipboard every 10 ms up to 300 ms.
+- **Timing.** Wait up to 600 ms for the hotkey modifiers to be released; poll the clipboard every 12 ms up to 800 ms; let a paste settle for 300 ms before restoring the snapshot.
 
 ### macOS
 
@@ -74,7 +74,7 @@ No background retries: a retry could paste stale text into a different context.
 - One polish action at a time; the hotkey is ignored while working.
 - Provider calls run on `spawn_blocking` so the UI and hotkey loop stay responsive.
 - The action carries a timeout from the config; cancel support is planned.
-- The overlay is shown by the backend before the action starts and hidden by the frontend after a terminal state.
+- The overlay is shown by the backend after capture succeeds (or after a capture error) and hidden by the frontend 1800 ms after a terminal state.
 
 ## Testing
 

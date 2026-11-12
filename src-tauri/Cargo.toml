@@ -17,6 +17,9 @@ tauri-build = { version = "2", features = [] }
 refiny-core = { path = "../crates/refiny-core" }
 tauri = { version = "2", features = [] }
 tauri-plugin-global-shortcut = "2"
+arboard = "3"
+enigo = "0.6"
+device_query = "4"
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

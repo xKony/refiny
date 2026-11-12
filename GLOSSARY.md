@@ -8,8 +8,8 @@ The vocabulary Refiny uses in code, issues, and documentation. Prefer these term
 | **Polish** | The transformation from rough text to corrected text. | Refine (as a noun), rewrite |
 | **Polish action** | One hotkey-triggered run: capture → polish → replace. | Job, task |
 | **Selection** | The text highlighted in the foreground app when the hotkey fires. | Highlight |
-| **Capture** | Reading the selection, currently planned as a clipboard round-trip. | Grab, copy |
-| **Replace** | Writing polished text over the selection, currently planned as a paste. | Insert, overwrite |
+| **Capture** | Reading the selection through a clipboard round-trip. | Grab, copy |
+| **Replace** | Writing polished text over the selection with a synthetic paste. | Insert, overwrite |
 | **Preservation list** | User-defined terms that must remain byte-identical. | Whitelist, dictionary |
 | **Prompt template** | User-editable system prompt; empty means the built-in default. | Custom prompt |
 | **Mixed-language input** | Text containing spans in more than one natural language; each span keeps its language. | Multilingual mode |

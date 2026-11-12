@@ -8,7 +8,7 @@ Refiny is an open-source desktop companion for people whose thoughts move faster
 
 [Read the whitepaper](docs/whitepaper.md) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
 
-> **Status: pre-alpha.** The core pipeline and Tauri shell are scaffolded. The hotkey and overlay are wired; selection capture and replacement are the next milestone.
+> **Status: pre-alpha.** The hotkey, overlay, provider pipeline, and selection capture/replacement work end to end on Windows. macOS and Linux are compile-verified; runtime verification is the next milestone.
 
 ## Why
 
@@ -16,12 +16,12 @@ Writing in flow means not stopping to fix commas. Most tools ask you to leave th
 
 It is built for messy first drafts — lowercase fragments, missing punctuation, mixed languages, and names that must not be touched.
 
-## How it works (planned UX)
+## How it works
 
 1. Select text anywhere.
 2. Press `Ctrl+Alt+P` (`Cmd+Alt+P` on macOS).
 3. A low-poly mascot appears while Refiny polishes.
-4. The selection is replaced in place. `Esc` cancels.
+4. The selection is replaced in place.
 
 If anything fails, the original text is left untouched and the previous clipboard contents are restored.
 
@@ -38,9 +38,9 @@ Your own preservation list overrides everything.
 
 | Platform | Status |
 | --- | --- |
-| Windows 10/11 | First-class target |
-| macOS | First-class target (Accessibility permission required) |
-| Linux | Best-effort: X11 supported, Wayland limited by compositor policy |
+| Windows 10/11 | First-class target; verified end to end |
+| macOS | First-class target (Accessibility permission required); compile-verified |
+| Linux | Best-effort: X11 supported, Wayland limited by compositor policy; compile-verified |
 
 ## Configuration
 
@@ -79,7 +79,7 @@ cargo tauri dev
 
 The frontend is embedded at build time, so `cargo run -p refiny` also launches the app without the Tauri CLI — useful for a quick smoke test.
 
-The settings window includes a **Try the pipeline** box that calls the configured provider directly. Pressing the hotkey shows the overlay with a placeholder error until selection capture lands.
+The settings window includes a **Try the pipeline** box that calls the configured provider directly. The hotkey path captures the foreground selection through the clipboard and restores the previous clipboard contents afterwards, so copying and pasting still behave as expected.
 
 ## Project layout
 
@@ -92,7 +92,7 @@ docs/                 Whitepaper, architecture, ADRs
 
 ## Roadmap
 
-- [ ] **v0.1 — Windows MVP:** selection capture/replace, hotkey, overlay, tray
+- [ ] **v0.1 — Windows MVP:** hotkey, overlay, and selection capture/replace done; tray and onboarding pending
 - [ ] **v0.2 — Cross-platform:** macOS and Linux (X11), permissions, packaging
 - [ ] **v0.3 — Mascot and control:** animated mascot set, cancel, history, prompt presets
 - [ ] **v1.0 — Distribution:** installers, signing, auto-update

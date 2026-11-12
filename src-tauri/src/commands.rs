@@ -1,4 +1,5 @@
-use std::time::Duration;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use refiny_core::prompt::build_prompt;
 use refiny_core::{Config, OpenAiCompatible, Polisher};
@@ -92,32 +93,66 @@ pub fn hide_overlay(window: tauri::WebviewWindow) {
     let _ = window.hide();
 }
 
-/// Starts one polish action. Selection capture is still a stub, so this
-/// currently demonstrates the overlay and event pipeline.
+/// Starts one polish action, ignoring the hotkey while another is running.
 pub fn handle_hotkey(app: &tauri::AppHandle) {
+    let busy = {
+        let state = app.state::<AppState>();
+        if state.busy.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        Arc::clone(&state.busy)
+    };
+
+    let app = app.clone();
+    std::thread::spawn(move || {
+        let _guard = BusyGuard(busy);
+        run_action(&app);
+    });
+}
+
+/// Clears the busy flag even if the action panics.
+struct BusyGuard(Arc<AtomicBool>);
+
+impl Drop for BusyGuard {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::SeqCst);
+    }
+}
+
+fn run_action(app: &tauri::AppHandle) {
+    // Capture before showing the overlay so the overlay can never take focus
+    // away from the app that owns the selection.
+    let text = match selection::capture() {
+        Ok(text) => text,
+        Err(error) => {
+            show_overlay(app);
+            emit_state(app, StateEvent::error(error.user_message()));
+            return;
+        }
+    };
+
+    show_overlay(app);
+    emit_state(app, StateEvent::working());
+
+    let config = app.state::<AppState>().config.clone();
+    let polished = match run_pipeline(&config, &text) {
+        Ok(polished) => polished,
+        Err(error) => {
+            emit_state(app, StateEvent::error(error));
+            return;
+        }
+    };
+
+    match selection::replace(&polished) {
+        Ok(()) => emit_state(app, StateEvent::success("Done.")),
+        Err(error) => emit_state(app, StateEvent::error(error.user_message())),
+    }
+}
+
+fn show_overlay(app: &tauri::AppHandle) {
     if let Some(overlay) = app.get_webview_window("overlay") {
         let _ = overlay.show();
     }
-
-    emit_state(app, StateEvent::working());
-
-    let app = app.clone();
-    std::thread::spawn(move || match selection::capture() {
-        Ok(text) => {
-            let config = app.state::<AppState>().config.clone();
-            match run_pipeline(&config, &text) {
-                Ok(polished) => match selection::replace(&polished) {
-                    Ok(()) => emit_state(&app, StateEvent::success("Done.")),
-                    Err(error) => emit_state(&app, StateEvent::error(error.to_string())),
-                },
-                Err(error) => emit_state(&app, StateEvent::error(error)),
-            }
-        }
-        Err(error) => {
-            std::thread::sleep(Duration::from_millis(700));
-            emit_state(&app, StateEvent::error(error.to_string()));
-        }
-    });
 }
 
 fn run_pipeline(config: &Config, text: &str) -> Result<String, String> {
