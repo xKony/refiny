@@ -9,6 +9,7 @@ const els = {
   provider: document.querySelector("#provider"),
   apiKey: document.querySelector("#api-key"),
   configPath: document.querySelector("#config-path"),
+  lastAction: document.querySelector("#last-action"),
   setup: document.querySelector("#setup"),
   setupTitle: document.querySelector("#setup-title"),
   setupCommand: document.querySelector("#setup-command"),
@@ -149,9 +150,14 @@ els.dismissSetup.addEventListener("click", () => {
 
 listen?.("refiny-state", (event) => {
   const payload = event.payload ?? {};
-  if (payload.state === "error") {
-    setStatus(payload.message, true);
+  // The overlay owns the in-place feedback. This row is a history of the last
+  // hotkey action, kept separate from the "Try the pipeline" status so one
+  // never overwrites the other.
+  if (payload.state === "working") {
+    return;
   }
+  els.lastAction.textContent = payload.message || payload.state;
+  els.lastAction.classList.toggle("warn", payload.state === "error");
 });
 
 loadConfig();

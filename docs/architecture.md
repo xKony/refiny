@@ -77,6 +77,7 @@ No background retries: a retry could paste stale text into a different context.
 - Provider calls run on `spawn_blocking` so the UI and hotkey loop stay responsive.
 - The action carries a timeout from the config; cancel support is planned.
 - The overlay is shown by the backend after capture succeeds (or after a capture error) and hidden by the frontend 1800 ms after a terminal state.
+- Hotkey outcomes also go to a **Last action** row in the settings window. It is kept separate from the manual test box's status, so a background action never looks like a failure of the box the user just clicked.
 
 ## Testing
 

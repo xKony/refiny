@@ -83,13 +83,13 @@ cargo tauri dev
 
 The frontend is embedded at build time, so `cargo run -p refiny` also launches the app without the Tauri CLI — useful for a quick smoke test.
 
-The settings window includes a **Try the pipeline** box that calls the configured provider directly. The hotkey path captures the foreground selection through the clipboard and restores the previous clipboard contents afterwards, so copying and pasting still behave as expected.
+The settings window includes a **Try the pipeline** box that calls the configured provider directly. A **Last action** row reports the outcome of the most recent hotkey run, so the two never overwrite each other. The hotkey path captures the foreground selection through the clipboard and restores the previous clipboard contents afterwards, so copying and pasting still behave as expected.
 
 ## Project layout
 
 ```
 crates/refiny-core/   Pure logic: config, prompt, provider (no UI, no OS APIs)
-src-tauri/            Tauri shell: hotkey, window management, commands
+src-tauri/            Tauri shell: hotkey, tray, windows, commands, selection
 src/                  Overlay and settings UI (plain HTML/CSS/JS)
 docs/                 Whitepaper, architecture, ADRs
 ```
