@@ -25,3 +25,26 @@ jobs:
         run: cargo clippy -p refiny-core --all-targets -- -D warnings
       - name: Test
         run: cargo test -p refiny-core
+
+  shell:
+    name: Shell (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev
+      - uses: Swatinem/rust-cache@v2
+      - name: Check
+        run: cargo check -p refiny --locked
+      - name: Clippy
+        run: cargo clippy -p refiny --all-targets -- -D warnings
