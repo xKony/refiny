@@ -2,6 +2,8 @@
 
 **Select text. Hit a hotkey. Get polished writing.**
 
+[![CI](https://github.com/xKony/refiny/actions/workflows/ci.yml/badge.svg)](https://github.com/xKony/refiny/actions/workflows/ci.yml)
+
 Refiny is an open-source desktop companion for people whose thoughts move faster than their keyboard. It fixes grammar, punctuation, and capitalization in place — without switching apps — while keeping names, technical terms, and mixed languages intact.
 
 [Read the whitepaper](docs/whitepaper.md) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
