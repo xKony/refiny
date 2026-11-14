@@ -78,7 +78,7 @@ Nothing here has been run.
 
 ## Failure taxonomy
 
-Every failure reaches the overlay as the `Display` string of an error. Text is left untouched unless the failure happens after a successful paste.
+Every failure reaches the overlay as text derived from the error: the `Display` string, except "nothing selected", which is rewritten per platform. The selection is untouched unless the failure happens after the paste has already landed.
 
 | Failure | Message shown | Text state |
 | --- | --- | --- |
@@ -90,7 +90,7 @@ Every failure reaches the overlay as the `Display` string of an error. Text is l
 | Provider returned an `error` object | "provider returned an error: {message}" | unchanged |
 | No choices or empty content | "provider returned no choices" / "provider returned empty text" | unchanged |
 | Network failure or timeout | "provider request failed: {reqwest error}" | unchanged |
-| Clipboard or synthetic-input failure | "could not access the clipboard: ..." / "could not send synthetic input: ..." | clipboard restored |
+| Clipboard or synthetic-input failure | "could not access the clipboard: ..." / "could not send synthetic input: ..." | unchanged; clipboard restored |
 
 There is no retry. A retry could paste stale text into a different context.
 
