@@ -15,7 +15,7 @@ Refiny is a tray application. It reads the selected text through a clipboard rou
 
 If capture or the provider call fails, the text stays as it was and the clipboard is put back afterwards.
 
-The settings window shows the hotkey, the provider, whether the API key is visible to the process, and the outcome of the last hotkey run. It also has a **Try the pipeline** box that sends whatever you type through the same code path. Closing the window leaves Refiny in the tray; **Quit** in the tray menu exits.
+The settings window is the way in. It has four tabs: **Provider** (presets for OpenAI, OpenRouter, Ollama, and LM Studio that fill the URL and model, editable fields, and a connection test), **Hotkey** (changes take effect immediately and keep the old shortcut if the new one is taken), **Prompts** (the default prompt, the preservation list, and named presets you can switch from the tray), and **Playground** (sends text through the same pipeline as the hotkey). Closing the window leaves Refiny in the tray; **Quit** in the tray menu exits.
 
 ## Platform status
 
@@ -31,7 +31,11 @@ The interaction depends on a global hotkey, synthetic copy and paste, and a clip
 
 ## Configuration
 
-Refiny reads `config.toml` from Tauri's app config directory for the identifier `dev.refiny.app`. On Windows that is `%APPDATA%\dev.refiny.app\config.toml`; the settings window displays the resolved path. The file is created with defaults on first launch:
+Everything is set from the settings window: provider, key, hotkey, prompts, and the preservation list. A save applies to the next polish action without a restart.
+
+The window has four tabs. **Provider** has presets for OpenAI, OpenRouter, Ollama, and LM Studio that fill the URL and model, plus editable fields and a connection test. **Hotkey** changes the shortcut in place and keeps the old one if the new one is taken. **Prompts** edits the default prompt, the preservation list, and named presets. **Playground** sends text through the same pipeline as the hotkey.
+
+Refiny still reads `config.toml` from Tauri's app config directory for the identifier `dev.refiny.app`. On Windows that is `%APPDATA%\dev.refiny.app\config.toml`; the window shows the resolved path. The file is created with defaults on first launch:
 
 ```toml
 hotkey = "CommandOrControl+Alt+P"
@@ -39,6 +43,7 @@ prompt = ""
 preserve = []
 timeout_ms = 20000
 mascot = "corgi"
+active_prompt = ""
 
 [provider]
 base_url = "https://api.openai.com/v1"
@@ -46,22 +51,20 @@ model = "gpt-4o-mini"
 api_key_env = "REFINY_API_KEY"
 ```
 
-- `hotkey` is a Tauri shortcut string. It is registered once at startup.
-- `prompt` is the system prompt. Empty means the built-in default in `crates/refiny-core/src/prompt.rs`.
+- `hotkey` is a Tauri shortcut string. Changing it in the app re-registers it in the running process.
+- `prompt` is the default system prompt. Empty means the built-in default in `crates/refiny-core/src/prompt.rs`.
 - `preserve` holds terms to keep exactly as written. Blank and duplicate entries are dropped before the list is appended to the prompt.
 - `timeout_ms` bounds the provider request.
 - `mascot` is accepted and passed to the frontend, but nothing reads it. The overlay always shows the corgi.
 - `provider.base_url` takes any endpoint with the `POST {base_url}/chat/completions` shape. Point it at Ollama or LM Studio to keep text on your machine.
+- `provider.api_key_env` names an environment variable, not a value. It is a fallback for when no key is stored.
+- `prompts` holds named prompt templates and `active_prompt` names the one in use. The tray menu switches between them. An empty or unknown name uses `prompt`.
 
-**The file is read once, at startup, and nothing in the app ever updates it.** It is written exactly once, on the first run that creates it. `Config::save` exists in `refiny-core` and is called only by `load_or_create`; no command writes configuration, so an edit to an existing file does nothing until you quit from the tray and relaunch. The same applies to `hotkey`, which cannot change without a restart.
+**The file is readable and editable by hand, but nothing watches it.** An edit made outside the app takes effect after a restart; the window is the supported path.
 
-`provider.api_key_env` names an environment variable, not a value. The key is read from that variable on every request and is never written to `config.toml`. A running process cannot gain an environment variable, so set it before launching Refiny. Until you dismiss it, the setup panel appears whenever the key is missing and shows the command for your platform; on Windows that is:
+**The API key is not in this file.** It goes to the OS credential store (Windows Credential Manager, macOS Keychain, Linux Secret Service) under the service `dev.refiny.app`. When nothing is stored, Refiny reads the variable named by `provider.api_key_env`, so an existing setup keeps working. A running process cannot gain an environment variable, which is why setting one with `setx` still needs a restart; pasting the key into the window does not.
 
-```powershell
-setx REFINY_API_KEY "sk-..."
-```
-
-The **Recheck configuration** button re-reads the process environment at that moment. `setx` writes to the registry, which a running process does not observe, so the panel keeps reporting the key as missing. Restart Refiny after setting one.
+A local provider needs no key. Leave the key field blank, and the request goes out with no `Authorization` header.
 
 ## Build
 
@@ -77,8 +80,8 @@ The frontend is embedded at build time, so `cargo run -p refiny` also launches t
 
 ## Project layout
 
-- `crates/refiny-core` - config, prompt construction, provider client. No UI or OS code, so it builds and tests anywhere Rust runs.
-- `src-tauri` - the Tauri shell: hotkey, tray, windows, commands. Platform-specific behavior is confined to `src-tauri/src/selection.rs`, which owns capture and replace.
+- `crates/refiny-core` - config and its store, the secret store seam, prompt construction, the selection seam, the polish action's orchestration, provider presets, and the provider client. No UI or OS code, so it builds and tests anywhere Rust runs.
+- `src-tauri` - the Tauri shell: hotkey, tray, windows, commands, and the two implementations of the OS seams (`selection.rs` for the clipboard round trip, `keychain.rs` for the credential store).
 - `src` - settings and overlay UI, plain HTML, CSS, and JS embedded at build time.
 - `docs` - the whitepaper, the architecture reference, the ADRs, and agent instructions.
 
@@ -88,8 +91,8 @@ The frontend is embedded at build time, so `cargo run -p refiny` also launches t
 
 There is no dated plan and no milestone list. GitHub issues are the only record of intended work.
 
-- Working, on Windows: hotkey, selection capture and replace, overlay, tray lifecycle, first-run setup, and the provider client.
-- Open, unscheduled: [issue #1](https://github.com/xKony/refiny/issues/1) makes Refiny configurable from inside the app (saving settings, OS keychain for the key, hotkey changes without a restart, provider and prompt presets). [Issue #4](https://github.com/xKony/refiny/issues/4) adds the seams needed to test the polish action.
+- Working, on Windows: hotkey, selection capture and replace, overlay, tray lifecycle, and the whole settings window - provider form with presets and a connection test, OS keychain for the key, hotkey changes without a restart, named prompt presets switchable from the tray, and the playground.
+- Open, unscheduled: [issue #11](https://github.com/xKony/refiny/issues/11) explores replacing the four hand-written provider presets with the models.dev catalog.
 - Not scheduled: runtime verification on macOS or Linux, Wayland support, streaming, cancel, history, per-app profiles, packaging, installers, code signing, and auto-update. None of these has an owner or a date.
 
 ## Contributing

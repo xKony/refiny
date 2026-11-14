@@ -49,7 +49,8 @@ Rule 8 is the prompt-injection boundary. Selected text can contain anything, inc
 
 - **Selected text leaves the machine** and goes to whichever provider `provider.base_url` names. Point it at a local server (Ollama, LM Studio, vLLM) to keep text on the machine.
 - **No telemetry, no analytics, no text logging.** Refiny's own code has no logging statements.
-- **The API key is an environment variable, read at call time.** `provider.api_key_env` holds the variable's name. The key is never written to `config.toml`, and the only write Refiny makes to that file is the initial defaults on first run.
+- **The API key lives in the OS keychain.** A key pasted into the settings window is stored as a per-user credential (Windows Credential Manager, macOS Keychain, Linux Secret Service) and read on every request, so no restart is needed to start using it. `provider.api_key_env` remains a fallback for setups that already provide a key through the environment. The key is never written to `config.toml`. See [ADR-0006](adr/0006-secrets-in-os-keychain.md).
+- **Non-secret settings are a plain TOML file** the user can read, edit, and back up. The window writes it on save; nothing else does.
 - **The clipboard is borrowed and returned.** Refiny snapshots it, clears it to detect an empty copy, and restores the snapshot after capture and after replacement. Restoring is best effort; a failure there is ignored, because the action's result matters more.
 - **Clipboard managers can observe the temporary text.** That is a consequence of the round trip, and is the strongest argument for a future accessibility-API path.
 - **Tauri's capability model limits the webview.** The declared capability grants both windows `core:default` only, and the content security policy allows scripts only from the app itself, with inline styles permitted.

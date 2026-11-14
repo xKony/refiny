@@ -1,0 +1,19 @@
+docs: describe the settings window as it now works
+
+The README said the config file was read once and nothing wrote it, which
+stopped being true with the settings window. The configuration section now
+describes what the window does, where the key actually lives, and what a hand
+edit still costs.
+
+Also:
+
+- architecture.md gains the config, secret, and selection seams, the new
+  failure table for settings errors, and the current test inventory.
+- ADR-0007 records why configuration is a live value behind a store rather than
+  a copy captured at startup.
+- GLOSSARY.md picks up the vocabulary the code now uses: config store, live
+  config, secret store, key source, provider preset, prompt preset, playground.
+- CONTRIBUTING.md says where the new seams belong and why tests create scratch
+  space under target/ rather than the machine temp directory.
+
+Closes #1, #3, #4, #6, #7, #8, #9, #10.

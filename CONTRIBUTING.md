@@ -26,9 +26,11 @@ CI runs two jobs on Windows, macOS, and Ubuntu. One runs `cargo fmt --all -- --c
 
 ## Where code goes
 
-- `crates/refiny-core` - configuration, prompt construction, provider client. Keep Tauri, window, clipboard, and input code out of it.
-- `src-tauri` - the Tauri shell. Platform-specific behavior belongs in `src-tauri/src/selection.rs`, the one boundary between the app and the OS.
+- `crates/refiny-core` - configuration and its store, the secret store seam, prompt construction, the selection seam, the polish action's orchestration, provider presets, and the provider client. Keep Tauri, window, clipboard, and input code out of it.
+- `src-tauri` - the Tauri shell. The two OS boundaries are `src-tauri/src/selection.rs` (clipboard round trip and synthetic input) and `src-tauri/src/keychain.rs` (the OS credential store). Both implement traits from `refiny-core`.
 - `src` - static HTML, CSS, and JS. No bundler and no Node toolchain.
+
+When something in the app needs the OS, define the trait in `refiny-core`, implement it in `src-tauri`, and add an in-memory implementation for tests. That is what makes the polish action testable without a desktop session.
 
 What each module owns is in [docs/architecture.md](docs/architecture.md#workspace-layout).
 
@@ -36,13 +38,22 @@ What each module owns is in [docs/architecture.md](docs/architecture.md#workspac
 
 The current test inventory, and what is not covered, is in [docs/architecture.md](docs/architecture.md#testing).
 
-- Add a unit test for any change to the prompt builder, config loader, or provider client.
-- `src-tauri` has no tests and no seam that would let the polish action be tested with a fake provider or a fake selection service. If you change its behavior, say in the issue what you ran by hand and on which platform. Building that seam is [issue #4](https://github.com/xKony/refiny/issues/4).
+- Add a unit test for any change to the prompt builder, config layer, secret resolution, preset table, orchestration, or provider client.
+- Tests create scratch space under `target/test-tmp` through `crates/refiny-core/src/test_support.rs`, not the machine temp directory, so they do not depend on `TMPDIR` permissions. Use `test_support::temp_dir()` rather than `tempfile::tempdir()`.
+- Anything in `src-tauri` that cannot be tested without a desktop session: say in the issue what you ran by hand and on which platform.
 - Do not claim platform verification you did not perform.
 
 ## Configuration during development
 
-Point `provider.base_url` at a local OpenAI-compatible server such as Ollama or LM Studio to avoid a hosted provider, and set the environment variable named by `provider.api_key_env`. The file's location, format, and read-at-startup behavior are in the [README](README.md#configuration).
+Point the provider at a local OpenAI-compatible server such as Ollama or LM Studio to avoid a hosted provider. The settings window is the fastest way: pick a preset, edit the model if yours differs, and save.
+
+During development the app writes its config to the platform's app config directory. To keep runs isolated, or to run without touching your real settings, override the directory at build time:
+
+```bash
+TAURI_CONFIG='{"app":{"appDirectoriesOverride":"./dev-data"}}' cargo tauri dev
+```
+
+The file's location, format, and behavior are in the [README](README.md#configuration). The API key is not in it; it goes to the OS credential store, which is why `cargo test -p refiny` keeps the real-keychain test `#[ignore]`d.
 
 Never commit API keys, tokens, or private text samples.
 
