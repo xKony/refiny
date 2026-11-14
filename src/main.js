@@ -258,9 +258,21 @@ async function saveProvider(event) {
     setStatus(els.providerStatus, "Saved. The next action uses it.");
   } catch (error) {
     setStatus(els.providerStatus, String(error), true);
+    // The save did not happen, so the form must agree with the running config
+    // rather than keep a rejected value on screen.
+    restoreProviderFields();
   } finally {
     setBusy(els.saveProvider, false);
   }
+}
+
+function restoreProviderFields() {
+  if (!current) return;
+  els.baseUrl.value = current.base_url;
+  els.model.value = current.model;
+  els.apiKeyEnv.value = current.api_key_env;
+  els.apiKeyInput.value = "";
+  markActivePreset();
 }
 
 async function testProvider() {
