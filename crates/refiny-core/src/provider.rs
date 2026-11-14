@@ -3,12 +3,15 @@
 //! One client covers OpenAI, OpenRouter, Ollama, LM Studio, vLLM, and anything
 //! else that exposes `POST {base_url}/chat/completions`.
 
+use std::sync::Arc;
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::config::Config;
+use crate::pipeline::PolishProvider;
+use crate::secrets::{ResolvedKey, SecretStore, resolve};
 
 /// A text transformation provider.
 pub trait Polisher {
@@ -57,13 +60,44 @@ impl OpenAiCompatible {
         })
     }
 
-    pub fn from_config(config: &Config) -> Result<Self, ProviderError> {
+    pub fn from_config(config: &Config, api_key: Option<String>) -> Result<Self, ProviderError> {
         Self::new(
             config.provider.base_url.clone(),
             config.provider.model.clone(),
-            config.api_key(),
+            api_key,
             Duration::from_millis(config.timeout_ms),
         )
+    }
+}
+
+/// Builds an [`OpenAiCompatible`] from the config and secret store for each call.
+///
+/// The key is resolved here, through the one place that decides the order, so
+/// the running app picks up a key stored a second ago.
+pub struct ConfiguredProvider {
+    secrets: Arc<dyn SecretStore>,
+}
+
+impl ConfiguredProvider {
+    pub fn new(secrets: Arc<dyn SecretStore>) -> Self {
+        Self { secrets }
+    }
+
+    /// The key in effect for `config`, and where it came from.
+    pub fn resolve(&self, config: &Config) -> ResolvedKey {
+        resolve(config, self.secrets.as_ref())
+    }
+}
+
+impl PolishProvider for ConfiguredProvider {
+    fn polish(
+        &self,
+        config: &Config,
+        system_prompt: &str,
+        text: &str,
+    ) -> Result<String, ProviderError> {
+        let key = self.resolve(config).key;
+        OpenAiCompatible::from_config(config, key)?.polish(system_prompt, text)
     }
 }
 

@@ -1,15 +1,8 @@
-//! Platform boundary for reading and replacing the foreground selection.
+//! The real OS selection: a clipboard round trip and synthetic input.
 //!
-//! Both operations use a clipboard round-trip, isolated here so the rest of the
-//! app never touches OS APIs:
-//!
-//! 1. snapshot the clipboard,
-//! 2. send the platform copy or paste shortcut,
-//! 3. read or write the clipboard,
-//! 4. restore the snapshot.
-//!
-//! Failures restore the snapshot before returning, so a failed action never
-//! leaves the user's clipboard replaced by the selection.
+//! This module is the only place that touches the clipboard or sends keystrokes.
+//! It implements the core [`Selection`] seam so the polish action can be tested
+//! with a fake.
 
 use std::panic;
 use std::thread::sleep;
@@ -18,10 +11,7 @@ use std::time::{Duration, Instant};
 use arboard::{Clipboard, ImageData};
 use device_query::{DeviceQuery, DeviceState, Keycode};
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
-use thiserror::Error;
-
-/// Selections longer than this are rejected before they reach the provider.
-pub const MAX_CHARS: usize = 20_000;
+use refiny_core::{MAX_CHARS, Selection, SelectionError};
 
 /// How long to wait for the target app to answer a copy.
 const CAPTURE_TIMEOUT: Duration = Duration::from_millis(800);
@@ -31,46 +21,21 @@ const MODIFIER_TIMEOUT: Duration = Duration::from_millis(600);
 /// How long to let the target app consume a paste before restoring the clipboard.
 const PASTE_SETTLE: Duration = Duration::from_millis(300);
 
-#[derive(Debug, Error)]
-pub enum SelectionError {
-    #[error("could not access the clipboard: {0}")]
-    Clipboard(String),
-    #[error("could not send synthetic input: {0}")]
-    Input(String),
-    #[error("nothing was selected")]
-    NothingSelected,
-    #[error("refusing to paste empty text")]
-    Empty,
-    #[error("the selection is longer than {0} characters")]
-    TooLong(usize),
-}
+/// The clipboard round trip, as the core seam expects it.
+pub struct OsSelection;
 
-impl SelectionError {
-    /// A message suitable for the overlay, with platform-specific hints.
-    pub fn user_message(&self) -> String {
-        match self {
-            Self::NothingSelected if cfg!(target_os = "macos") => "Nothing was selected. If this keeps happening, grant Refiny Accessibility permission in System Settings, Privacy & Security, Accessibility.".to_string(),
-            Self::NothingSelected if cfg!(target_os = "linux") => {
-                "Nothing was selected. Wayland sessions may block synthetic input; X11 is required."
-                    .to_string()
-            }
-            Self::NothingSelected => {
-                "Nothing was selected. Elevated windows and some apps block synthetic input."
-                    .to_string()
-            }
-            other => other.to_string(),
-        }
+impl Selection for OsSelection {
+    fn capture(&self) -> Result<String, SelectionError> {
+        capture()
+    }
+
+    fn replace(&self, text: &str) -> Result<(), SelectionError> {
+        replace(text)
     }
 }
 
-/// What the clipboard held before an action.
-struct Snapshot {
-    text: Option<String>,
-    image: Option<ImageData<'static>>,
-}
-
 /// Captures the text currently selected in the foreground app.
-pub fn capture() -> Result<String, SelectionError> {
+fn capture() -> Result<String, SelectionError> {
     let mut clipboard = Clipboard::new().map_err(clipboard_error)?;
     let mut snapshot = snapshot(&mut clipboard);
 
@@ -89,7 +54,7 @@ pub fn capture() -> Result<String, SelectionError> {
 }
 
 /// Replaces the foreground selection with `text`.
-pub fn replace(text: &str) -> Result<(), SelectionError> {
+fn replace(text: &str) -> Result<(), SelectionError> {
     if text.is_empty() {
         return Err(SelectionError::Empty);
     }
@@ -108,6 +73,12 @@ pub fn replace(text: &str) -> Result<(), SelectionError> {
 
     restore(&mut clipboard, &mut snapshot);
     result
+}
+
+/// What the clipboard held before an action.
+struct Snapshot {
+    text: Option<String>,
+    image: Option<ImageData<'static>>,
 }
 
 fn snapshot(clipboard: &mut Clipboard) -> Snapshot {

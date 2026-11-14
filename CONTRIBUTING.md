@@ -22,7 +22,7 @@ cargo test -p refiny-core
 cargo tauri dev
 ```
 
-CI runs `cargo fmt --all -- --check` and `cargo test -p refiny-core` on Windows, macOS, and Ubuntu, and `cargo check -p refiny` plus clippy on the same three. A green run proves the code compiles and the core tests pass. It does not execute the app.
+CI runs two jobs on Windows, macOS, and Ubuntu. One runs `cargo fmt --all -- --check`, `cargo clippy -p refiny-core --all-targets -- -D warnings`, and `cargo test -p refiny-core`. The other runs `cargo check -p refiny --locked` and `cargo clippy -p refiny --all-targets -- -D warnings`, installing the Linux system packages first on Ubuntu. A green run proves the code compiles and the core tests pass. It does not execute the app.
 
 ## Where code goes
 

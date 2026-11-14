@@ -1,4 +1,5 @@
 mod commands;
+mod keychain;
 mod selection;
 mod state;
 mod tray;
@@ -28,6 +29,10 @@ pub fn run() {
         )
         .invoke_handler(tauri::generate_handler![
             commands::get_config,
+            commands::save_provider,
+            commands::save_prompts,
+            commands::save_hotkey,
+            commands::test_provider,
             commands::polish_text,
             commands::hide_overlay,
         ])
@@ -43,21 +48,28 @@ pub fn run() {
         })
         .setup(|app| {
             let handle = app.handle().clone();
-            let (config, config_path, first_run) = state::load_config(&handle)?;
+            let (config, first_run) = state::load(&handle)?;
 
-            let shortcut: Shortcut = config.hotkey.parse().map_err(|error| {
+            let hotkey_text = config.snapshot().hotkey;
+            let shortcut: Shortcut = hotkey_text.parse().map_err(|error| {
                 Box::<dyn std::error::Error>::from(format!(
-                    "invalid hotkey `{}` in config: {error}",
-                    config.hotkey
+                    "invalid hotkey `{hotkey_text}` in config: {error}"
                 ))
             })?;
 
+            // Fails loudly rather than starting a tray app that answers to
+            // nothing: the hotkey is the only way in.
             app.global_shortcut().register(shortcut)?;
+
+            let secrets = state::secrets();
+            let action = state::build_action(config.clone(), secrets.clone());
 
             // Manage the state before any window exists. Tauri normally builds
             // config windows before the setup closure runs, which lets the
             // frontend call commands before `AppState` is managed.
-            app.manage(state::AppState::new(config, config_path, first_run));
+            app.manage(state::AppState::new(
+                config, secrets, action, shortcut, first_run,
+            ));
 
             for window_config in app.config().app.windows.clone() {
                 tauri::WebviewWindowBuilder::from_config(app.handle(), &window_config)?.build()?;

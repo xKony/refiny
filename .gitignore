@@ -17,3 +17,6 @@ config.local.toml
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Scratch space for manual end-to-end runs
+/.e2e/

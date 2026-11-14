@@ -23,7 +23,7 @@ The cost is not only time. Leaving the text starts a context switch, and the wri
 2. **Transform, do not author.** Fix expression; add no ideas, opinions, or facts.
 3. **Names are sacred.** The preservation list is appended to every prompt as an explicit instruction to reproduce those terms exactly, including spelling, capitalization, and diacritics.
 4. **Language-agnostic.** Mixed-language text stays mixed. Nothing is translated.
-5. **Fail safe.** A failed action leaves the text as it was, and any clipboard snapshot taken is restored afterwards.
+5. **Fail safe.** When capture or the provider call fails, the text stays as it was. Nothing is written unless a result came back.
 6. **Small models by default.** The default model is `gpt-4o-mini` and requests use temperature 0, so a cheap hosted endpoint or a local server is enough.
 7. **Bring your own provider.** Hosted, self-hosted, or on-device, as long as it speaks the chat-completions shape.
 

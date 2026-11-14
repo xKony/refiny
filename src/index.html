@@ -16,86 +16,222 @@
             <p class="tagline">Select text. Hit a hotkey. Get polished writing.</p>
           </div>
         </div>
-        <span class="badge">pre-alpha</span>
+        <div class="masthead-meta">
+          <span class="badge">pre-alpha</span>
+          <span class="version">v<span id="version">0.0.1</span></span>
+        </div>
       </header>
 
-      <section class="card setup-card" id="setup" hidden aria-labelledby="setup-title">
-        <div class="setup-heading">
-          <h2 id="setup-title">Welcome to Refiny</h2>
-          <button class="link-button" id="dismiss-setup" type="button">Dismiss</button>
+      <div class="statusbar" role="status" aria-label="Current configuration">
+        <div class="statusbit">
+          <span class="statusbit-label">Hotkey</span>
+          <kbd id="hotkey">-</kbd>
         </div>
-        <ol class="setup-steps">
-          <li>
-            <strong>Connect a provider</strong>
-            <p>
-              The API key is read from an environment variable — it is never written to
-              <code>config.toml</code>.
-            </p>
-            <pre><code id="setup-command">setx REFINY_API_KEY "sk-..."</code></pre>
+        <div class="statusbit">
+          <span class="statusbit-label">Model</span>
+          <span id="provider" class="statusbit-value">-</span>
+        </div>
+        <div class="statusbit">
+          <span class="statusbit-label">Key</span>
+          <span id="api-key" class="statusbit-value">-</span>
+        </div>
+        <div class="statusbit">
+          <span class="statusbit-label">Prompt</span>
+          <span id="active-prompt" class="statusbit-value">-</span>
+        </div>
+        <div class="statusbit statusbit-wide">
+          <span class="statusbit-label">Last action</span>
+          <span id="last-action" class="statusbit-value">-</span>
+        </div>
+      </div>
+
+      <aside class="setup-banner" id="setup" hidden aria-labelledby="setup-title">
+        <div class="setup-copy">
+          <h2 id="setup-title">Finish setup</h2>
+          <p class="setup-lede">
+            Choose a provider and paste a key. It applies without a restart.
+          </p>
+        </div>
+        <div class="setup-actions">
+          <button id="setup-start" class="primary" type="button">Configure provider</button>
+          <button id="dismiss-setup" class="link-button" type="button">Dismiss</button>
+        </div>
+      </aside>
+
+      <nav class="tabs" role="tablist" aria-label="Settings sections">
+        <button class="tab" id="tab-provider" type="button" role="tab" aria-controls="panel-provider" aria-selected="true" data-panel="panel-provider">
+          Provider
+        </button>
+        <button class="tab" id="tab-hotkey" type="button" role="tab" aria-controls="panel-hotkey" aria-selected="false" data-panel="panel-hotkey" tabindex="-1">
+          Hotkey
+        </button>
+        <button class="tab" id="tab-prompts" type="button" role="tab" aria-controls="panel-prompts" aria-selected="false" data-panel="panel-prompts" tabindex="-1">
+          Prompts
+        </button>
+        <button class="tab" id="tab-playground" type="button" role="tab" aria-controls="panel-playground" aria-selected="false" data-panel="panel-playground" tabindex="-1">
+          Playground
+        </button>
+      </nav>
+
+      <section class="panel" id="panel-provider" role="tabpanel" aria-labelledby="tab-provider">
+        <div class="panel-body">
+          <div class="panel-head">
+            <div>
+              <h2>Provider</h2>
+              <p class="panel-lede">
+                Any endpoint with the <code>POST /chat/completions</code> shape works. Point it at a
+                local server to keep your text on your machine.
+              </p>
+            </div>
+          </div>
+
+          <div class="preset-grid" id="presets" role="radiogroup" aria-label="Provider presets"></div>
+
+          <form id="provider-form" class="form" autocomplete="off">
+            <div class="fields">
+              <label class="field span-2">
+                <span>Base URL</span>
+                <input id="base-url" type="url" spellcheck="false" placeholder="https://api.openai.com/v1" />
+              </label>
+              <label class="field">
+                <span>Model</span>
+                <input id="model" type="text" spellcheck="false" placeholder="gpt-4o-mini" />
+              </label>
+              <label class="field">
+                <span>Key environment variable</span>
+                <input id="api-key-env" type="text" spellcheck="false" placeholder="REFINY_API_KEY" />
+              </label>
+              <label class="field span-2">
+                <span>API key</span>
+                <input
+                  id="api-key-input"
+                  type="password"
+                  spellcheck="false"
+                  autocomplete="off"
+                  placeholder="Paste a key, or leave blank to keep the stored one"
+                />
+              </label>
+            </div>
+            <p class="hint field-note" id="key-note"></p>
+          </form>
+        </div>
+
+        <div class="panel-actions">
+          <button id="save-provider" class="primary" type="button">Save provider</button>
+          <button id="test-provider" class="secondary" type="button">Test connection</button>
+          <button id="clear-key" class="link-button danger-link" type="button" hidden>
+            Remove stored key
+          </button>
+          <span id="provider-status" class="result-status" role="status"></span>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-hotkey" role="tabpanel" aria-labelledby="tab-hotkey" hidden>
+        <div class="panel-body">
+          <div class="panel-head">
+            <div>
+              <h2>Hotkey</h2>
+              <p class="panel-lede">
+                The global shortcut that starts a polish action. It applies the moment you save.
+              </p>
+            </div>
+          </div>
+
+          <form id="hotkey-form" class="form" autocomplete="off">
+            <label class="field">
+              <span>Shortcut</span>
+              <input id="hotkey-input" type="text" spellcheck="false" placeholder="CommandOrControl+Alt+P" />
+            </label>
             <p class="hint">
-              Restart Refiny after setting it. Local endpoints such as Ollama or LM Studio usually
-              need no key; edit <code>config.toml</code> to point at one.
+              Use <code>CommandOrControl</code> for Ctrl on Windows and Linux, Cmd on macOS. A
+              combination another application already owns is rejected, and your current hotkey keeps
+              working.
             </p>
-          </li>
-          <li>
-            <strong>Polish anything</strong>
-            <p>
-              Select text in any app and press <kbd id="setup-hotkey">Ctrl+Alt+P</kbd>. The polished
-              text replaces the selection.
-            </p>
-          </li>
-          <li>
-            <strong>Leave it running</strong>
-            <p>
-              Closing this window keeps Refiny in the tray. Use the tray menu to reopen it or quit.
-            </p>
-          </li>
-        </ol>
-        <div class="actions">
-          <button id="recheck" class="primary" type="button">Recheck configuration</button>
-          <span id="setup-status" class="result-status" role="status"></span>
+          </form>
+        </div>
+
+        <div class="panel-actions">
+          <button id="save-hotkey" class="primary" type="button">Apply hotkey</button>
+          <span id="hotkey-status" class="result-status" role="status"></span>
         </div>
       </section>
 
-      <section class="card status-card" aria-label="Configuration status">
-        <div class="status-row">
-          <span class="label">Hotkey</span>
-          <kbd id="hotkey">—</kbd>
+      <section class="panel" id="panel-prompts" role="tabpanel" aria-labelledby="tab-prompts" hidden>
+        <div class="panel-body">
+          <div class="panel-head">
+            <div>
+              <h2>Prompts</h2>
+              <p class="panel-lede">
+                An empty prompt uses the built-in default. The preservation list is appended to
+                whichever prompt is active.
+              </p>
+            </div>
+          </div>
+
+          <form id="prompt-form" class="form" autocomplete="off">
+            <label class="field">
+              <span>Default prompt</span>
+              <textarea id="prompt-input" rows="4" spellcheck="false"></textarea>
+            </label>
+            <label class="field">
+              <span>Preserve exactly, one per line</span>
+              <textarea id="preserve-input" rows="2" spellcheck="false" placeholder="Refiny&#10;Kubernetes"></textarea>
+            </label>
+
+            <div class="presets-editor">
+              <div class="section-heading">
+                <div>
+                  <span class="label">Named presets</span>
+                  <p class="hint">Switch between these from the tray menu.</p>
+                </div>
+                <button id="add-preset" class="link-button" type="button">Add preset</button>
+              </div>
+              <div id="preset-list" class="preset-list"></div>
+            </div>
+          </form>
         </div>
-        <div class="status-row">
-          <span class="label">Provider</span>
-          <span id="provider" class="value">—</span>
+
+        <div class="panel-actions">
+          <button id="save-prompts" class="primary" type="button">Save prompts</button>
+          <span id="prompt-status" class="result-status" role="status"></span>
         </div>
-        <div class="status-row">
-          <span class="label">API key</span>
-          <span id="api-key" class="value">—</span>
-        </div>
-        <div class="status-row">
-          <span class="label">Last action</span>
-          <span id="last-action" class="value">—</span>
-        </div>
-        <p class="hint config-path" id="config-path"></p>
       </section>
 
-      <section class="card">
-        <div class="section-heading">
-          <h2>Try the pipeline</h2>
-          <span class="hint">Ctrl/Cmd + Enter</span>
+      <section class="panel" id="panel-playground" role="tabpanel" aria-labelledby="tab-playground" hidden>
+        <div class="panel-body">
+          <div class="panel-head">
+            <div>
+              <h2>Playground</h2>
+              <p class="panel-lede">
+                Sends the text below through the same pipeline the hotkey uses, without touching your
+                selection.
+              </p>
+            </div>
+            <span class="chip">Ctrl/Cmd + Enter</span>
+          </div>
+
+          <div class="form">
+            <label class="field">
+              <span>Text</span>
+              <textarea id="input" rows="5" spellcheck="false" placeholder="helo wrld this is  a test"></textarea>
+            </label>
+            <div class="field">
+              <span>Result</span>
+              <pre id="output" class="output" hidden></pre>
+              <p id="output-empty" class="hint empty-note">The polished text appears here.</p>
+            </div>
+          </div>
         </div>
-        <p class="hint">
-          This calls the configured provider directly, using the same pipeline as the hotkey.
-        </p>
-        <textarea id="input" rows="6" spellcheck="false" placeholder="helo wrld this is  a test"></textarea>
-        <div class="actions">
+
+        <div class="panel-actions">
           <button id="polish" class="primary" type="button">Polish text</button>
           <span id="result-status" class="result-status" role="status"></span>
         </div>
-        <pre id="output" class="output" hidden></pre>
       </section>
 
       <footer>
-        <span>MIT · Refiny <span id="version">0.0.1</span></span>
-        <span>Edit <code>config.toml</code> to change the prompt, provider, hotkey, or preservation list.</span>
+        <span>MIT · Refiny</span>
+        <span id="footer-path" class="footer-path"></span>
       </footer>
     </main>
 

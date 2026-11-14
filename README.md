@@ -9,11 +9,11 @@ Refiny is a tray application. It reads the selected text through a clipboard rou
 ## How it works
 
 1. Select text in any app.
-2. Press `Ctrl+Alt+P`.
+2. Press `Ctrl+Alt+P`, the default hotkey.
 3. A small overlay shows a corgi mascot while the request runs.
 4. The result replaces the selection.
 
-If a step fails, the original text is left untouched and the clipboard is put back afterwards.
+If capture or the provider call fails, the text stays as it was and the clipboard is put back afterwards.
 
 The settings window shows the hotkey, the provider, whether the API key is visible to the process, and the outcome of the last hotkey run. It also has a **Try the pipeline** box that sends whatever you type through the same code path. Closing the window leaves Refiny in the tray; **Quit** in the tray menu exits.
 
@@ -25,7 +25,7 @@ The settings window shows the hotkey, the provider, whether the API key is visib
 | macOS | Compiles. `cargo check` and `cargo clippy` pass in CI. Never launched. |
 | Linux | Compiles. `cargo check` and `cargo clippy` pass in CI on Ubuntu. Never launched. |
 
-CI runs the `refiny-core` unit tests on all three platforms and compiles the Tauri shell on each. A green run means the tests pass and the code builds. It says nothing about whether the app works on macOS or Linux, because the author owns no machine that runs either. Nobody is scheduled to change that.
+CI runs two jobs on Windows, macOS, and Ubuntu. One checks formatting, runs clippy and the `refiny-core` tests. The other compiles the Tauri shell. [CONTRIBUTING.md](CONTRIBUTING.md#build-and-test) lists the commands. A green run means the tests pass and the code builds. It says nothing about whether the app works on macOS or Linux, because the author owns no machine that runs either. Nobody is scheduled to change that.
 
 The interaction depends on a global hotkey, synthetic copy and paste, and a clipboard round trip, all of which are OS-specific. On Linux, X11 is the assumption; Wayland compositors generally block global hotkeys and synthetic input.
 
@@ -78,9 +78,9 @@ The frontend is embedded at build time, so `cargo run -p refiny` also launches t
 ## Project layout
 
 - `crates/refiny-core` - config, prompt construction, provider client. No UI or OS code, so it builds and tests anywhere Rust runs.
-- `src-tauri` - the Tauri shell: hotkey, tray, windows, commands, and the platform-specific selection code.
+- `src-tauri` - the Tauri shell: hotkey, tray, windows, commands. Platform-specific behavior is confined to `src-tauri/src/selection.rs`, which owns capture and replace.
 - `src` - settings and overlay UI, plain HTML, CSS, and JS embedded at build time.
-- `docs` - the whitepaper, the architecture reference, and the ADRs.
+- `docs` - the whitepaper, the architecture reference, the ADRs, and agent instructions.
 
 [docs/architecture.md](docs/architecture.md#workspace-layout) has the per-file table.
 
@@ -90,7 +90,7 @@ There is no dated plan and no milestone list. GitHub issues are the only record 
 
 - Working, on Windows: hotkey, selection capture and replace, overlay, tray lifecycle, first-run setup, and the provider client.
 - Open, unscheduled: [issue #1](https://github.com/xKony/refiny/issues/1) makes Refiny configurable from inside the app (saving settings, OS keychain for the key, hotkey changes without a restart, provider and prompt presets). [Issue #4](https://github.com/xKony/refiny/issues/4) adds the seams needed to test the polish action.
-- Not planned: runtime verification on macOS or Linux, Wayland support, streaming, cancel, history, per-app profiles, packaging, installers, code signing, and auto-update. None of these has an owner or a date.
+- Not scheduled: runtime verification on macOS or Linux, Wayland support, streaming, cancel, history, per-app profiles, packaging, installers, code signing, and auto-update. None of these has an owner or a date.
 
 ## Contributing
 

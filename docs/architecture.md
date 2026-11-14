@@ -107,11 +107,11 @@ There is no retry. A retry could paste stale text into a different context.
 
 ## Testing
 
-- **Unit, 7 tests, all in `crates/refiny-core`:** two config tests (TOML round trip, `load_or_create` writing defaults), one config validation test (empty model rejected), two prompt tests (empty template falls back to the default, preservation list deduplicated), and two provider tests against an `httpmock` server (success, and a 401 surfacing the status).
-- **Nothing else is automated.** There is no `tests/` directory, no integration test, and no test in `src-tauri`. `run_pipeline` constructs `OpenAiCompatible` directly and `selection` is free functions, so there is no injection point for a fake provider or a fake selection service. Adding one is [issue #4](https://github.com/xKony/refiny/issues/4).
+- **Unit tests exist only in `crates/refiny-core`:** config round trip and rejection of an empty model, prompt fallback and preservation-list deduplication, and the provider client against an `httpmock` server (success and a 401). Run them with `cargo test -p refiny-core`.
+- **Nothing else is automated.** There is no test in `src-tauri` and no injection point for a fake provider or a fake selection service, so the polish action's orchestration cannot be tested as written. Closing that gap is [issue #4](https://github.com/xKony/refiny/issues/4).
 - **Manual:** the author has run the hotkey path on Windows. There is no written matrix of foreground apps, DPI settings, or monitors.
 
-CI runs `cargo fmt --all -- --check` and `cargo test -p refiny-core` on Windows, macOS, and Ubuntu, and `cargo check -p refiny` plus `cargo clippy -p refiny --all-targets -- -D warnings` on the same three. A green run proves the shell compiles; it does not execute the app.
+CI runs the same two jobs on Windows, macOS, and Ubuntu: one checks formatting, clippy, and the `refiny-core` tests, the other compiles the Tauri shell. The exact commands are in [CONTRIBUTING.md](../CONTRIBUTING.md#build-and-test). A green run proves the shell compiles; it does not execute the app.
 
 ## Decisions
 
