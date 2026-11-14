@@ -116,6 +116,12 @@ function restoreTab() {
   showTab(valid ? saved : "panel-provider");
 }
 
+/** Setup has not been finished, so land on the section that finishes it. */
+function focusFirstRun() {
+  showTab("panel-provider");
+  els.baseUrl.focus();
+}
+
 /* Provider presets ------------------------------------------------------- */
 
 function renderPresets() {
@@ -219,7 +225,11 @@ async function loadConfig() {
   }
 
   try {
-    applyConfig(await invoke("get_config"));
+    const config = await invoke("get_config");
+    applyConfig(config);
+    // A remembered tab is the right default, except on a fresh install where
+    // the only useful place to start is the provider form.
+    if (!config.setup_complete) focusFirstRun();
   } catch (error) {
     setStatus(els.providerStatus, String(error), true);
   }
