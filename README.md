@@ -1,61 +1,42 @@
 # Refiny
 
-**Select text. Hit a hotkey. Get polished writing.**
+Select text, press a hotkey, get it back with the grammar, punctuation, and capitalization fixed, without leaving the app you are writing in.
 
-[![CI](https://github.com/xKony/refiny/actions/workflows/ci.yml/badge.svg)](https://github.com/xKony/refiny/actions/workflows/ci.yml)
+Refiny is a tray application. It reads the selected text through a clipboard round trip, sends it to an OpenAI-compatible chat endpoint, and pastes the result over the selection. Names, technical terms, and each language span are meant to come back unchanged, and a preservation list you maintain takes priority.
 
-Refiny is an open-source desktop companion for people whose thoughts move faster than their keyboard. It fixes grammar, punctuation, and capitalization in place — without switching apps — while keeping names, technical terms, and mixed languages intact.
-
-[Read the whitepaper](docs/whitepaper.md) · [Architecture](docs/architecture.md) · [Contributing](CONTRIBUTING.md)
-
-> **Status: pre-alpha.** The hotkey, overlay, provider pipeline, selection capture/replacement, tray lifecycle, and first-run setup work end to end on Windows. macOS and Linux are compile-verified; runtime verification is the next milestone.
-
-## Why
-
-Writing in flow means not stopping to fix commas. Most tools ask you to leave the app, paste into a chat window, and carry the result back. Refiny removes that round trip: the text is corrected where it was written.
-
-It is built for messy first drafts — lowercase fragments, missing punctuation, mixed languages, and names that must not be touched.
+**Status: pre-alpha, version 0.0.1, one author, one contributor.** Nothing has been released: no tags, no installers, no packages, and nobody outside the author has installed it. The hotkey path has been run end to end on Windows only. macOS and Linux compile; nobody has launched either. See [Platform status](#platform-status).
 
 ## How it works
 
-1. Select text anywhere.
-2. Press `Ctrl+Alt+P` (`Cmd+Alt+P` on macOS).
-3. A low-poly mascot appears while Refiny polishes.
-4. The selection is replaced in place.
+1. Select text in any app.
+2. Press `Ctrl+Alt+P`.
+3. A small overlay shows a corgi mascot while the request runs.
+4. The result replaces the selection.
 
-If anything fails, the original text is left untouched and the previous clipboard contents are restored.
+If a step fails, the original text is left untouched and the previous clipboard contents are restored.
 
-Refiny keeps running in the system tray. Closing the settings window hides it instead of quitting, so the hotkey keeps working; use **Quit** in the tray menu to exit. Launching the app again restores the existing window.
+The settings window shows the hotkey, the provider, whether the API key is visible to the process, and the outcome of the last hotkey run. It also has a **Try the pipeline** box that sends whatever you type through the same code path. Closing the window leaves Refiny in the tray; **Quit** in the tray menu exits.
 
-## What it preserves
+## Platform status
 
-- Names, brands, and product names
-- Code identifiers, URLs, emails, numbers, and units
-- Each language span in mixed-language text
-- Meaning, tone, and structure
-
-Your own preservation list overrides everything.
-
-## Platform support
-
-| Platform | Status |
+| Platform | State |
 | --- | --- |
-| Windows 10/11 | First-class target; verified end to end |
-| macOS | First-class target (Accessibility permission required); compile-verified |
-| Linux | Best-effort: X11 supported, Wayland limited by compositor policy; compile-verified |
+| Windows 10/11 | Runs. Verified by hand by the author. |
+| macOS | Compiles. `cargo check` and `cargo clippy` pass in CI. Never launched. |
+| Linux | Compiles. `cargo check` and `cargo clippy` pass in CI on Ubuntu. Never launched. |
+
+CI builds the Tauri shell on all three platforms and runs the `refiny-core` tests. A green run means the code compiles. It says nothing about whether the app works on macOS or Linux, because the author owns no machine that runs either. Nobody is scheduled to change that.
+
+The interaction depends on a global hotkey, synthetic copy and paste, and a clipboard round trip, all of which are OS-specific. On Linux, X11 is the assumption; Wayland compositors generally block global hotkeys and synthetic input.
 
 ## Configuration
 
-Config lives in the platform config directory and is created on first run:
-
-- **Windows:** `%APPDATA%\dev.refiny.app\config.toml`
-- **macOS:** `~/Library/Application Support/dev.refiny.app/config.toml`
-- **Linux:** `~/.config/dev.refiny.app/config.toml`
+Refiny reads `config.toml` from Tauri's app config directory for the identifier `dev.refiny.app`. On Windows that is `%APPDATA%\dev.refiny.app\config.toml`; the settings window displays the resolved path. The file is created with defaults on first launch:
 
 ```toml
 hotkey = "CommandOrControl+Alt+P"
 prompt = ""
-preserve = ["Refiny", "Kubernetes", "xKony"]
+preserve = []
 timeout_ms = 20000
 mascot = "corgi"
 
@@ -65,15 +46,26 @@ model = "gpt-4o-mini"
 api_key_env = "REFINY_API_KEY"
 ```
 
-The prompt is the system prompt. Leave it empty to use the built-in default. The preservation list is appended automatically. Secrets are read from the environment variable named by `provider.api_key_env` — never from the config file.
+- `hotkey` is a Tauri shortcut string. It is registered once at startup.
+- `prompt` is the system prompt. Empty means the built-in default in `crates/refiny-core/src/prompt.rs`.
+- `preserve` holds terms to keep exactly as written. Blank and duplicate entries are dropped before the list is appended to the prompt.
+- `timeout_ms` bounds the provider request.
+- `mascot` is read into the settings view but has no effect. The overlay always shows the corgi.
+- `provider.base_url` takes any endpoint with the `POST {base_url}/chat/completions` shape. Point it at Ollama or LM Studio to keep text on your machine.
 
-On first run Refiny shows a short setup panel with the exact command to set that variable on your platform. Set it before launching the app; the panel rechecks the configuration on demand.
+**The file is read once, at startup, and nothing in the app writes it.** `Config::save` exists in `refiny-core` but is never called, and no command writes configuration. The workflow today is: edit `config.toml`, quit from the tray, relaunch. The same applies to `hotkey`, which cannot change without a restart.
 
-Any OpenAI-compatible endpoint works. Point `provider.base_url` at Ollama or LM Studio to keep text local.
+`provider.api_key_env` names an environment variable, not a value. The key is read from that variable on every request and is never written to `config.toml`. A running process cannot gain an environment variable, so set it before launching Refiny. On first run the settings window shows the command for your platform; on Windows that is:
+
+```powershell
+setx REFINY_API_KEY "sk-..."
+```
+
+The **Recheck configuration** button re-reads the running process's environment, so it cannot see a variable set after launch. Restart Refiny after setting one.
 
 ## Build
 
-Prerequisites: Rust stable (edition 2024), the Tauri 2 CLI, and the platform dependencies listed in [CONTRIBUTING.md](CONTRIBUTING.md).
+Prerequisites are Rust stable (edition 2024) and, for `cargo tauri dev`, the Tauri 2 CLI. Platform packages are listed in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```bash
 cargo install tauri-cli --version "^2"
@@ -81,30 +73,32 @@ cargo test -p refiny-core
 cargo tauri dev
 ```
 
-The frontend is embedded at build time, so `cargo run -p refiny` also launches the app without the Tauri CLI — useful for a quick smoke test.
-
-The settings window includes a **Try the pipeline** box that calls the configured provider directly. A **Last action** row reports the outcome of the most recent hotkey run, so the two never overwrite each other. The hotkey path captures the foreground selection through the clipboard and restores the previous clipboard contents afterwards, so copying and pasting still behave as expected.
+The frontend is embedded at build time, so `cargo run -p refiny` also launches the app without the Tauri CLI.
 
 ## Project layout
 
 ```
-crates/refiny-core/   Pure logic: config, prompt, provider (no UI, no OS APIs)
-src-tauri/            Tauri shell: hotkey, tray, windows, commands, selection
-src/                  Overlay and settings UI (plain HTML/CSS/JS)
-docs/                 Whitepaper, architecture, ADRs
+crates/refiny-core/  Config, prompt construction, provider client. No UI or OS code.
+src-tauri/           Tauri shell: hotkey, tray, windows, commands, selection.
+src/                 Settings and overlay UI. Plain HTML, CSS, and JS, embedded at build time.
+docs/                Whitepaper, architecture, ADRs.
 ```
+
+[docs/architecture.md](docs/architecture.md) describes what each module owns.
 
 ## Roadmap
 
-- [ ] **v0.1 — Windows MVP:** hotkey, overlay, selection capture/replace, tray lifecycle, and first-run setup done
-- [ ] **v0.2 — Cross-platform:** macOS and Linux (X11), permissions, packaging
-- [ ] **v0.3 — Mascot and control:** animated mascot set, cancel, history, prompt presets
-- [ ] **v1.0 — Distribution:** installers, signing, auto-update
+Work lives in GitHub issues. There is no dated plan, and nothing below is scheduled.
+
+- Done, on Windows: hotkey, selection capture and replace, overlay, tray lifecycle, first-run setup, and the provider client.
+- Open: [issue #1](https://github.com/xKony/refiny/issues/1) covers making Refiny configurable inside the app: saving settings from the window, storing the key in the OS keychain, changing the hotkey without a restart, provider presets, and prompt presets.
+- Open: [issue #4](https://github.com/xKony/refiny/issues/4) adds the seams needed to test the polish action.
+- Not started and not planned: runtime verification on macOS and Linux, Wayland support, streaming, cancel, history, per-app profiles, packaging, installers, code signing, and auto-update.
 
 ## Contributing
 
-Issues and PRs are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md); good first tasks carry the `ready-for-agent` label.
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Issues and pull requests are welcome. Open tasks carry the `ready-for-agent` label.
 
 ## License
 
-MIT © 2026 xKony
+MIT. See [LICENSE](LICENSE).
