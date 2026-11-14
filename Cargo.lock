@@ -3506,7 +3506,7 @@ dependencies = [
 
 [[package]]
 name = "refiny"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "arboard",
  "device_query",
@@ -3523,7 +3523,7 @@ dependencies = [
 
 [[package]]
 name = "refiny-core"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "httpmock",
  "reqwest 0.12.28",
