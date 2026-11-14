@@ -1,6 +1,6 @@
 # Architecture
 
-Status: pre-alpha, version 0.0.1. The full hotkey path (capture, provider call, replace, overlay) has been run end to end on Windows, by hand, by the author. macOS and Linux compile and pass `cargo check` and `cargo clippy` in CI; nobody has launched the app on either platform. There are no releases and no published installers.
+Status: pre-alpha. The hotkey path has been run end to end on Windows only; macOS and Linux compile but have never been launched. See [Platform status](../README.md#platform-status) for the full statement. There are no releases and no published installers.
 
 ## Process model
 
@@ -23,16 +23,16 @@ The settings panel appears when no API key is visible to the process, and its ti
 2. **Capture.** Snapshot the clipboard, wait for the hotkey modifiers to be released (up to 600 ms), clear the clipboard, send the platform copy shortcut, then poll for text every 12 ms up to 800 ms. Restore the snapshot. Selections over 20,000 characters are rejected.
 3. **Prompt.** Build the system prompt from the user's template plus the preservation list.
 4. **Provider.** `POST {base_url}/chat/completions` with a system message and the selected text as the user message. Temperature 0. The request is bounded by `timeout_ms`.
-5. **Replace.** Put the result on the clipboard, wait for modifiers, send the platform paste shortcut, wait 300 ms for the target app to read the clipboard, then restore the snapshot. Empty results are refused.
+5. **Replace.** Put the result on the clipboard, wait for modifiers, send the platform paste shortcut, wait 300 ms for the target app to read the clipboard, then restore the snapshot. Empty results are refused. A target app that reads the clipboard later than 300 ms pastes the restored contents instead, and Refiny still reports success.
 6. **Overlay.** Shown as soon as capture returns, whether it succeeded or failed. It emits `working` on a successful capture, then `success` or `error`. The frontend hides it 1800 ms after a terminal state.
 
-Capture runs before the overlay is shown, so the overlay can never take focus away from the app that owns the selection. The overlay window is non-activating (`focus: false`) for the same reason. Every path restores the clipboard snapshot, including failures.
+Capture runs before the overlay is shown, so the overlay can never take focus away from the app that owns the selection. The overlay window is non-activating (`focus: false`) for the same reason. Every path that takes a clipboard snapshot restores it, including failures.
 
 ## Workspace layout
 
 | Path | Responsibility |
 | --- | --- |
-| `crates/refiny-core/src/config.rs` | TOML load, create, save (unused), validate, API-key lookup. |
+| `crates/refiny-core/src/config.rs` | TOML load, create-on-first-run, validate, API-key lookup. |
 | `crates/refiny-core/src/prompt.rs` | Default system prompt and preservation-list assembly. |
 | `crates/refiny-core/src/provider.rs` | `Polisher` trait and the OpenAI-compatible HTTP client. |
 | `src-tauri/src/lib.rs` | Tauri builder, plugins, hotkey registration, close-to-tray. |
@@ -48,13 +48,13 @@ Capture runs before the overlay is shown, so the overlay can never take focus aw
 
 `state::load_config` resolves Tauri's app config directory, creates `config.toml` with defaults when it is absent, and records `first_run`. `AppState` stores one `Config` value for the life of the process. Nothing reloads it.
 
-`Config::save` exists and is exercised by a unit test, but no command calls it. There is no command surface for writing configuration, no file watcher, and no reload path. The hotkey is parsed and registered once during setup; changing it requires an edit to `config.toml` and a restart. The API key is read from the environment on each request, which is why setting it also requires a restart.
+`Config::save` exists and is called only by `load_or_create`, so the app writes the file once, with defaults, when it is absent. Nothing else calls it. There is no command surface for writing configuration, no file watcher, and no reload path. The hotkey is parsed and registered once during setup; changing it requires an edit to `config.toml` and a restart. The API key is read from the environment on each request, which is why setting it also requires a restart.
 
 ## Platform implementation notes
 
 ### Windows
 
-- **Hotkey.** Tauri's global-shortcut plugin uses `RegisterHotKey` on a dedicated message loop.
+- **Hotkey.** Tauri's global-shortcut plugin wraps the `global-hotkey` crate, which calls `RegisterHotKey` against a hidden, no-activate window; the plugin marshals registration onto the app's main thread.
 - **Synthetic input.** `enigo` sends `SendInput` events with explicit key-down and key-up transitions.
 - **Clipboard.** `arboard` snapshots text, then an image if there is no text. The clipboard is cleared just before the copy is sent, so a silent copy (nothing selected) is detectable, then restored afterwards.
 - **Elevation.** User Interface Privilege Isolation blocks synthetic input into elevated windows. The failure is reported as "Nothing was selected"; there is no integrity-level probe.
@@ -72,33 +72,34 @@ Nothing here has been run. What the code does, and what the platform requires:
 
 Nothing here has been run.
 
-- X11 is the assumption: global hotkeys and synthetic input go through XTest, which `enigo` and the global-shortcut plugin support.
+- X11 is the assumption: the `global-hotkey` crate registers via `XGrabKey` and opens a direct X11 connection, failing with a clear error if it cannot. `enigo` sends synthetic input through XTest.
 - Wayland compositors generally block both. A Wayland session is expected to fail at capture; the user message says so.
-- Packaging would need WebKitGTK, `libappindicator` or `libayatana-appindicator`, and `librsvg2`. Without an appindicator package the tray fails to build and the app exits at startup. CI installs `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`, `libgtk-3-dev`, and `libx11-dev` before checking the shell.
+- Packaging would need WebKitGTK, `libappindicator` or `libayatana-appindicator`, and `librsvg2`. If the tray cannot be built, setup returns that error and the process exits at startup instead of running invisibly. CI installs `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`, `libgtk-3-dev`, and `libx11-dev` before checking the shell.
 
 ## Failure taxonomy
 
-Every failure reaches the overlay as text derived from the error: the `Display` string, except "nothing selected", which is rewritten per platform. The selection is untouched unless the failure happens after the paste has already landed.
+Every failure reaches the overlay as text derived from the error: the `Display` string, except "nothing selected", which is rewritten per platform. Capture and provider failures happen before any text is written, so the selection stays as it was.
 
 | Failure | Message shown | Text state |
 | --- | --- | --- |
 | Nothing selected, Windows | "Nothing was selected. Elevated windows and some apps block synthetic input." | unchanged |
-| Nothing selected, macOS | Same, plus a pointer to Accessibility permission | unchanged |
-| Nothing selected, Linux | Same, plus a note that Wayland may block synthetic input | unchanged |
+| Nothing selected, macOS | "Nothing was selected. If this keeps happening, grant Refiny Accessibility permission in System Settings, Privacy & Security, Accessibility." | unchanged |
+| Nothing selected, Linux | "Nothing was selected. Wayland sessions may block synthetic input; X11 is required." | unchanged |
 | Selection over 20,000 characters | "the selection is longer than 20000 characters" | unchanged |
 | Provider returned a non-2xx status | "provider returned HTTP {status}: {first 300 chars}" | unchanged |
 | Provider returned an `error` object | "provider returned an error: {message}" | unchanged |
 | No choices or empty content | "provider returned no choices" / "provider returned empty text" | unchanged |
 | Network failure or timeout | "provider request failed: {reqwest error}" | unchanged |
-| Clipboard or synthetic-input failure | "could not access the clipboard: ..." / "could not send synthetic input: ..." | unchanged; clipboard restored |
+| Clipboard or synthetic-input failure | "could not access the clipboard: ..." / "could not send synthetic input: ..." | unchanged; clipboard restored when the snapshot was taken |
 
 There is no retry. A retry could paste stale text into a different context.
 
-`selection::replace` also rejects empty text ("refusing to paste empty text"), but the provider client rejects an empty response first, so in practice that branch does not fire. A replace failure restores the clipboard, overwriting the polished text; it is not left there for the user to paste by hand.
+`selection::replace` also rejects empty text ("refusing to paste empty text"), but the provider client rejects an empty response first, so in practice that branch does not fire. A replace failure restores the clipboard, which discards the polished text: it is not left there for the user to paste by hand.
 
 ## Concurrency
 
 - One polish action at a time, guarded by an `AtomicBool` and released by a guard that runs even if the action panics.
+- The manual **Try the pipeline** command does not take that guard, so a manual call can overlap a hotkey action.
 - The polish action runs on its own thread; manual provider calls from the settings window run on `spawn_blocking`. Both block on a synchronous HTTP client.
 - Provider calls cannot be cancelled. There is no cancel keybinding.
 - The overlay is shown by the backend and hidden by the frontend 1800 ms after a terminal state.
@@ -106,16 +107,14 @@ There is no retry. A retry could paste stale text into a different context.
 
 ## Testing
 
-- **Unit, 7 tests, all in `crates/refiny-core`:** config TOML round trip, `load_or_create` writing defaults, rejection of an empty model, empty template falling back to the default prompt, preservation-list deduplication, and two provider tests against an `httpmock` server (success and a 401).
+- **Unit, 7 tests, all in `crates/refiny-core`:** two config tests (TOML round trip, `load_or_create` writing defaults), one config validation test (empty model rejected), two prompt tests (empty template falls back to the default, preservation list deduplicated), and two provider tests against an `httpmock` server (success, and a 401 surfacing the status).
 - **Nothing else is automated.** There is no `tests/` directory, no integration test, and no test in `src-tauri`. `run_pipeline` constructs `OpenAiCompatible` directly and `selection` is free functions, so there is no injection point for a fake provider or a fake selection service. Adding one is [issue #4](https://github.com/xKony/refiny/issues/4).
 - **Manual:** the author has run the hotkey path on Windows. There is no written matrix of foreground apps, DPI settings, or monitors.
 
 CI runs `cargo fmt --all -- --check` and `cargo test -p refiny-core` on Windows, macOS, and Ubuntu, and `cargo check -p refiny` plus `cargo clippy -p refiny --all-targets -- -D warnings` on the same three. A green run proves the shell compiles; it does not execute the app.
 
-## Open decisions
+## Decisions
 
-- Clipboard round trip versus accessibility APIs (UI Automation, AXUIElement, AT-SPI) for capture.
-- Whether any Linux support beyond X11 is worth attempting.
-- Auto-update and code signing, if the project ever ships builds.
+Settled choices are recorded as ADRs in `docs/adr/`: [stack](adr/0001-rust-and-tauri.md), [platform policy](adr/0002-platform-support-policy.md), [provider interface](adr/0003-openai-compatible-provider.md), [clipboard round trip](adr/0004-clipboard-round-trip.md), [tray lifecycle](adr/0005-tray-lifecycle.md).
 
-Settled elsewhere: tray lifecycle in [ADR-0005](adr/0005-tray-lifecycle.md), clipboard round trip in [ADR-0004](adr/0004-clipboard-round-trip.md), provider interface in [ADR-0003](adr/0003-openai-compatible-provider.md).
+Open questions, including which capture mechanism should replace the clipboard round trip, live in the [whitepaper](whitepaper.md#6-open-questions).
