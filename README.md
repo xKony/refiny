@@ -10,7 +10,7 @@ Refiny is a tray application. It reads the selected text through a clipboard rou
 
 1. Select text in any app.
 2. Press `Ctrl+Alt+P`, the default hotkey.
-3. A small overlay shows a corgi mascot while the request runs.
+3. A small pill beside the pointer shows a pixel mascot while the request runs.
 4. The result replaces the selection.
 
 If capture or the provider call fails, the text stays as it was and the clipboard is put back afterwards.
@@ -55,7 +55,7 @@ api_key_env = "REFINY_API_KEY"
 - `prompt` is the default system prompt. Empty means the built-in default in `crates/refiny-core/src/prompt.rs`.
 - `preserve` holds terms to keep exactly as written. Blank and duplicate entries are dropped before the list is appended to the prompt.
 - `timeout_ms` bounds the provider request.
-- `mascot` is accepted and passed to the frontend, but nothing reads it. The overlay always shows the corgi.
+- `mascot` is accepted and passed to the frontend, but nothing reads it. The pill always shows the same creature.
 - `provider.base_url` takes any endpoint with the `POST {base_url}/chat/completions` shape. Point it at Ollama or LM Studio to keep text on your machine.
 - `provider.api_key_env` names an environment variable, not a value. It is a fallback for when no key is stored.
 - `prompts` holds named prompt templates and `active_prompt` names the one in use. The tray menu switches between them. An empty or unknown name uses `prompt`.
@@ -93,7 +93,7 @@ The frontend is embedded at build time, so `cargo run -p refiny` also launches t
 There is no dated plan and no milestone list. GitHub issues are the only record of intended work.
 
 - Working, on Windows: hotkey, selection capture and replace, overlay, tray, and a complete settings window - provider form with presets and a connection test, OS keychain for the key, hotkey changes without a restart, named prompt presets switchable from the tray, and the playground. The window is drawn in the Marginalia system recorded in [DESIGN.md](DESIGN.md).
-- Open: [issue #13](https://github.com/xKony/refiny/issues/13) replaces the overlay card with a small pill that follows the cursor and carries a pixel mascot. [issue #11](https://github.com/xKony/refiny/issues/11) explores replacing the hand-written provider presets with the models.dev catalog.
+- Open: [issue #11](https://github.com/xKony/refiny/issues/11) explores replacing the hand-written provider presets with the models.dev catalog.
 - Known failure: [issue #14](https://github.com/xKony/refiny/issues/14) stops the app starting on the author's Windows machine because the WebView2 webview fails to create. The interface work above was checked in a browser against the same HTML, CSS, and JavaScript until that is fixed.
 - Not scheduled: runtime verification on macOS or Linux, Wayland support, streaming, cancel, history, per-app profiles, packaging, installers, code signing, and auto-update. None of these has an owner or a date.
 

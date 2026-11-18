@@ -76,9 +76,13 @@ Line length caps at 62ch for the lede and 66ch for hints. Nothing is justified.
 
 **Native parts.** Selection is lime. Scrollbars are themed to the rules. Checkboxes take `accent-color: --correction`, so the browser's own chrome belongs to the world.
 
+**Waiting pill.** The overlay is the waiting state, not a dialog: a 44px pill beside the pointer, its nearest edge 16px away, flipped to the other side when the screen edge is near and clamped to the monitor's work area so it never lands under the taskbar. Its window is click-through and non-activating, so the pill can be read but never touched. A 16x16 pixel creature, authored on that grid and drawn at 2x with snapped edges, sits on the left; the status line is mono at 11px and wraps to two lines at most, and the pill shrink-wraps it. Working makes the creature bob 2px on the spot and blink every third loop. Success and error stop it and take `--verified` or `--correction` on the border and the label. The transparent margin around the pill exists so the shadow has room to fall, and the placement maths in `src-tauri/src/overlay.rs` assumes it.
+
 ## Motion
 
-One grammar. 120ms, `cubic-bezier(0.22, 1, 0.36, 1)`, on colour, border, transform, filter, and shadow; 200ms is reserved for surfaces that travel further. Everything moves in or out, nothing loops. `prefers-reduced-motion` removes every duration, keeping only the end state.
+One grammar. 120ms, `cubic-bezier(0.22, 1, 0.36, 1)`, on colour, border, transform, filter, and shadow; 200ms is reserved for surfaces that travel further. In the settings window everything moves in or out and nothing loops.
+
+The waiting pill is the one exception: it is a status cue for a wait, so it has to show that it is still moving. Its loop runs on `--dur-loop`: a stepped 2px bob, and a blink every third loop. Nothing in it pretends to know how long the wait is. `prefers-reduced-motion` removes every duration in both surfaces, keeping only the end state.
 
 ## Contrast
 
@@ -88,7 +92,7 @@ Measured by ratio, not by eye, in both themes: every text token clears 4.5:1 aga
 
 - Fonts: Bricolage Grotesque and JetBrains Mono, SIL Open Font License 1.1, licence files in `src/fonts/`.
 - Screenshots under `.e2e/` and `.impeccable/` are scratch captures from review runs. They are gitignored, are not assets, and ship with nothing.
-- The overlay's low-poly corgi predates this system. It is existing brand art, untouched by the settings redesign, and issue #13 replaces it with a pixel mascot. The reference image the user supplied for that mascot is a style reference only: its palette, pose, and character must not be copied.
+- The waiting pill's mascot was authored for Refiny on a 16x16 grid in `src/overlay.html`. The reference image the user supplied for it was a style reference only: its palette, pose, and character are not copied.
 
 ## Rules for the next agent
 

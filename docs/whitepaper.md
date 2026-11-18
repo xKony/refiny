@@ -4,7 +4,7 @@ The reasoning behind Refiny: the problem it answers, the principles it is built 
 
 ## Abstract
 
-Refiny is a tray application that rewrites the text you have selected, in place, through a language model you choose. You press a hotkey; it captures the selection through a clipboard round trip, sends it to an OpenAI-compatible chat endpoint, and pastes the result over the selection. The system prompt is yours to replace, the provider is any endpoint with the `/chat/completions` shape, and the wait is shown as a small corgi rather than a spinner.
+Refiny is a tray application that rewrites the text you have selected, in place, through a language model you choose. You press a hotkey; it captures the selection through a clipboard round trip, sends it to an OpenAI-compatible chat endpoint, and pastes the result over the selection. The system prompt is yours to replace, the provider is any endpoint with the `/chat/completions` shape, and the wait is shown as a small pill beside the pointer with a pixel creature in it, rather than a spinner.
 
 ## 1. The problem
 

@@ -23,7 +23,7 @@ The vocabulary Refiny uses in code, issues, and documentation. Prefer these term
 | **Key source** | Where the key in effect came from: `keychain`, `environment`, or `none`. Shown in the status bar. | |
 | **Overlay** | Transparent always-on-top window shown during a polish action. | Popup, HUD |
 | **Tray** | System status-area icon that keeps Refiny running when the settings window is hidden. | Notification area, menu bar icon |
-| **Mascot** | The animated low-poly character in the overlay. | Avatar, spinner |
+| **Mascot** | The pixel creature in the waiting pill. | Avatar, spinner |
 | **Hotkey** | System-wide keyboard shortcut that starts a polish action. | Shortcut, keybind |
 | **Playground** | The settings tab that sends typed text through the same pipeline as the hotkey, without touching the selection. | Try the pipeline, test box |
 | **Mixed-language input** | Text containing spans in more than one natural language; each span keeps its language. | Multilingual mode |

@@ -9,7 +9,7 @@ A single user-level Tauri application, enforced by the single-instance plugin: a
 Two webview windows are declared in `src-tauri/tauri.conf.json` with `create: false` and built during setup:
 
 - **main** - settings in four tabs (Provider, Hotkey, Prompts, Playground) plus a status bar.
-- **overlay** - transparent, always-on-top, undecorated, mascot shown during a polish action.
+- **overlay** - transparent, always-on-top, undecorated, click-through, and non-activating. It is repositioned beside the pointer, clamped to the monitor's work area, and then shown, so it never flashes at the last place it was seen.
 
 Both load pages from `src/` and share `tokens.css`; the settings window adds `styles.css`, the overlay adds `overlay.css`. Neither is a framework build; the frontend is static HTML, CSS, and JS embedded at compile time.
 
