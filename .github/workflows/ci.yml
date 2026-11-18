@@ -48,3 +48,7 @@ jobs:
         run: cargo check -p refiny --locked
       - name: Clippy
         run: cargo clippy -p refiny --all-targets -- -D warnings
+      # The shell's own tests are pure functions (window placement, keychain
+      # round trip), so they run without a desktop session.
+      - name: Test
+        run: cargo test -p refiny --lib
