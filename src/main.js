@@ -8,13 +8,15 @@ const els = {
   setup: document.querySelector("#setup"),
   setupTitle: document.querySelector("#setup-title"),
   setupStart: document.querySelector("#setup-start"),
-  setupStatus: document.querySelector("#setup-status"),
   dismissSetup: document.querySelector("#dismiss-setup"),
 
   hotkey: document.querySelector("#hotkey"),
   provider: document.querySelector("#provider"),
   apiKey: document.querySelector("#api-key"),
   activePrompt: document.querySelector("#active-prompt"),
+  railNote: document.querySelector("#rail-note"),
+  railNoteTitle: document.querySelector("#rail-note-title"),
+  railNoteText: document.querySelector("#rail-note-text"),
   footerPath: document.querySelector("#footer-path"),
   lastAction: document.querySelector("#last-action"),
   version: document.querySelector("#version"),
@@ -67,10 +69,15 @@ function prettyHotkey(hotkey) {
   return hotkey.replace("CommandOrControl", isMac ? "Cmd" : "Ctrl");
 }
 
-function keySourceLabel(source) {
+function keySourceLabel(source, keyOptional) {
   if (source === "keychain") return "in keychain";
   if (source === "environment") return "from environment";
-  return "missing";
+  return keyOptional ? "not needed" : "missing";
+}
+
+/** The active provider preset, when the saved provider matches one exactly. */
+function activePreset() {
+  return presets.find((preset) => preset.id === current?.matched_preset) ?? null;
 }
 
 function setStatus(el, message, isError = false) {
@@ -101,12 +108,24 @@ for (const tab of els.tabs) {
   tab.addEventListener("click", () => showTab(tab.dataset.panel));
   tab.addEventListener("keydown", (event) => {
     const index = els.tabs.indexOf(tab);
-    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-      event.preventDefault();
-      const delta = event.key === "ArrowRight" ? 1 : -1;
-      const next = els.tabs[(index + delta + els.tabs.length) % els.tabs.length];
-      showTab(next.dataset.panel, { focus: true });
+    const last = els.tabs.length - 1;
+    let next = null;
+
+    // The rail is vertical on wide windows and horizontal on narrow ones, so
+    // both axes move through the same order.
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      next = index === last ? 0 : index + 1;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      next = index === 0 ? last : index - 1;
+    } else if (event.key === "Home") {
+      next = 0;
+    } else if (event.key === "End") {
+      next = last;
     }
+
+    if (next === null) return;
+    event.preventDefault();
+    showTab(els.tabs[next].dataset.panel, { focus: true });
   });
 }
 
@@ -141,18 +160,50 @@ function renderPresets() {
     button.append(name, meta);
 
     button.addEventListener("click", () => applyPreset(preset));
+    button.addEventListener("keydown", movePresetSelection);
     els.presets.append(button);
   }
   markActivePreset();
 }
 
+function movePresetSelection(event) {
+  const items = [...els.presets.querySelectorAll(".preset")];
+  const index = items.indexOf(event.currentTarget);
+  const last = items.length - 1;
+  let next = null;
+
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+    next = index === last ? 0 : index + 1;
+  } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+    next = index === 0 ? last : index - 1;
+  } else if (event.key === "Home") {
+    next = 0;
+  } else if (event.key === "End") {
+    next = last;
+  }
+
+  if (next === null) return;
+  event.preventDefault();
+  // A radio group selects as it moves, so the pressed key both focuses and
+  // fills the form; Save stays the only thing that applies it.
+  items[next].focus();
+  items[next].click();
+}
+
 function markActivePreset() {
   const matched = current?.matched_preset ?? null;
-  for (const button of els.presets.querySelectorAll(".preset")) {
-    const active = button.dataset.presetId === matched;
+  const buttons = [...els.presets.querySelectorAll(".preset")];
+  const selected = buttons.find((button) => button.dataset.presetId === matched);
+
+  for (const button of buttons) {
+    const active = button === selected;
     button.classList.toggle("selected", active);
     button.setAttribute("aria-checked", String(active));
+    button.tabIndex = active ? 0 : -1;
   }
+
+  // Nothing selected means the group is still reachable by keyboard.
+  if (!selected && buttons[0]) buttons[0].tabIndex = 0;
 }
 
 function applyPreset(preset) {
@@ -171,12 +222,14 @@ function applyConfig(config) {
   current = config;
   presets = config.presets ?? [];
 
+  const keyOptional = activePreset()?.key_optional === true;
+
   els.version.textContent = config.version;
   els.hotkey.textContent = prettyHotkey(config.hotkey);
   els.provider.textContent = config.model;
-  els.provider.title = config.base_url;
-  els.apiKey.textContent = keySourceLabel(config.key_source);
-  els.apiKey.classList.toggle("warn", !config.api_key_present);
+  els.provider.title = `${config.model} - ${config.base_url}`;
+  els.apiKey.textContent = keySourceLabel(config.key_source, keyOptional);
+  els.apiKey.classList.toggle("warn", !config.api_key_present && !keyOptional);
   els.activePrompt.textContent = config.active_prompt?.trim() || "Default";
   els.footerPath.textContent = config.config_path;
   els.footerPath.title = config.config_path;
@@ -197,22 +250,49 @@ function applyConfig(config) {
   renderPresetEditor();
 
   updateKeyNote();
+  updateRailNote();
   renderPresets();
   updateSetupPanel();
 }
 
 function updateKeyNote() {
-  const preset = presets.find((entry) => entry.id === current?.matched_preset);
+  const preset = activePreset();
   els.keyNote.textContent = preset
     ? preset.note
     : "A key is optional for a local server. Leaving the field blank keeps whatever is stored.";
   els.clearKey.hidden = current?.key_source !== "keychain";
 }
 
+/** The rail note is the one place that says whether there is anything to do. */
+function updateRailNote() {
+  if (!current) return;
+  const keyOptional = activePreset()?.key_optional === true;
+
+  if (!current.setup_complete) {
+    els.railNoteTitle.textContent = "Not configured yet.";
+    els.railNoteText.textContent =
+      "Choose a provider and paste a key. It applies without a restart.";
+  } else if (!current.api_key_present && !keyOptional) {
+    els.railNoteTitle.textContent = "Key missing.";
+    els.railNoteText.textContent =
+      "Paste one on the right, or point the URL at a local model and leave the field blank.";
+  } else if (!current.api_key_present && keyOptional) {
+    els.railNoteTitle.textContent = "No key needed.";
+    els.railNoteText.textContent =
+      "This provider runs on your machine. Leave the key blank and select the model you loaded.";
+  } else {
+    els.railNoteTitle.textContent = "Ready.";
+    els.railNoteText.textContent = "Select text in any app, then press the hotkey.";
+  }
+}
+
 function updateSetupPanel() {
   const dismissed = localStorage.getItem(SETUP_DISMISSED_KEY) === "1";
   const showSetup = !current?.setup_complete && !dismissed;
   els.setup.hidden = !showSetup;
+  // The banner and the rail note say the same thing; show one at a time, and
+  // let the note take over once setup is done or the banner is dismissed.
+  els.railNote.hidden = showSetup;
   if (showSetup) {
     els.setupTitle.textContent = current?.first_run ? "Welcome to Refiny" : "Finish setup";
   }
@@ -372,7 +452,7 @@ function renderPresetEditor() {
 
     const remove = document.createElement("button");
     remove.type = "button";
-    remove.className = "link-button danger-link";
+    remove.className = "link danger";
     remove.textContent = "Remove";
     remove.setAttribute("aria-label", `Remove preset ${index + 1}`);
     remove.addEventListener("click", () => {
@@ -509,12 +589,14 @@ els.hotkeyInput.addEventListener("keydown", (event) => {
 
 els.setupStart.addEventListener("click", () => {
   els.setup.hidden = true;
+  els.railNote.hidden = false;
   showTab("panel-provider");
   els.baseUrl.focus();
 });
 els.dismissSetup.addEventListener("click", () => {
   localStorage.setItem(SETUP_DISMISSED_KEY, "1");
   els.setup.hidden = true;
+  els.railNote.hidden = false;
 });
 
 els.polish.addEventListener("click", polish);

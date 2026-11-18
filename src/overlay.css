@@ -1,0 +1,154 @@
+/* The overlay window.
+ *
+ * Separate from the settings sheet because it is a separate surface: a small
+ * floating card with the mascot. It spends the same tokens.
+ */
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+.mascot-card {
+  width: 204px;
+  padding: 18px 14px 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-container);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+  text-align: center;
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+.mascot {
+  display: block;
+  width: 132px;
+  height: 132px;
+  margin: 0 auto;
+}
+
+.overlay-label {
+  margin: 6px 0 0;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.mascot-card[data-state="working"] .mascot {
+  animation: bob 1.15s ease-in-out infinite;
+}
+
+.mascot-card[data-state="working"] .ear-left {
+  animation: ear-left 1.15s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.mascot-card[data-state="working"] .ear-right {
+  animation: ear-right 1.15s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.mascot-card[data-state="working"] .tongue {
+  animation: tongue 1.15s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+
+.mascot-card[data-state="success"] {
+  border-color: var(--verified);
+}
+
+.mascot-card[data-state="success"] .overlay-label {
+  color: var(--verified);
+}
+
+.mascot-card[data-state="error"] {
+  border-color: var(--correction);
+}
+
+.mascot-card[data-state="error"] .overlay-label {
+  color: var(--correction);
+}
+
+.mascot-card[data-state="error"] .mascot {
+  animation: tilt 380ms var(--ease-out);
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes ear-left {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-4deg);
+  }
+}
+
+@keyframes ear-right {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes tongue {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.82);
+  }
+}
+
+@keyframes tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-5deg);
+  }
+  70% {
+    transform: rotate(4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-card,
+  .mascot,
+  .ear,
+  .tongue {
+    animation: none !important;
+    transition: none !important;
+  }
+}

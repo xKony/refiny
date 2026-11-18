@@ -11,7 +11,7 @@ Two webview windows are declared in `src-tauri/tauri.conf.json` with `create: fa
 - **main** - settings in four tabs (Provider, Hotkey, Prompts, Playground) plus a status bar.
 - **overlay** - transparent, always-on-top, undecorated, mascot shown during a polish action.
 
-Both load pages from `src/` and share `styles.css`. Neither is a framework build; the frontend is static HTML, CSS, and JS embedded at compile time.
+Both load pages from `src/` and share `tokens.css`; the settings window adds `styles.css`, the overlay adds `overlay.css`. Neither is a framework build; the frontend is static HTML, CSS, and JS embedded at compile time.
 
 The window is a fixed-height frame: the masthead, status bar, and tabs never move, and only the active panel's body scrolls. Each panel pins its action bar below that scroll area, so Save is always reachable.
 

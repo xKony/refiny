@@ -1,0 +1,106 @@
+/* Tokens: the single source of truth for the Marginalia world.
+ *
+ * Two themes follow the OS. Every colour a component uses is named here by
+ * role, never by appearance, so the light theme is a substitution rather than
+ * a second stylesheet.
+ *
+ * The world: a marked-up proof sheet. Chalk ground, graphite rules, a lime
+ * highlighter used as the mark of the active thing, and correction red for
+ * what is wrong. Ink is warm black, never pure.
+ */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("fonts/bricolage-latin.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jetbrains-mono-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Type voice: one grotesque for prose, one mono for values. The mono is not
+   * decoration, it marks anything that is a value you could retype: URLs,
+   * model names, keys, env vars, paths, statuses. */
+  --font-sans: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+
+  /* Ink scale. Warm, never pure black. Every step still clears 4.5:1 on
+   * the ground, so the quietest label is quiet, not unreadable. */
+  --ink: #1b1b1b;
+  --ink-2: #4a4844;
+  --ink-3: #6b6861;
+  --ink-4: #736f68;
+
+  /* Light theme surfaces: chalk paper. */
+  --ground: #fafaf8;
+  --surface: #ffffff;
+  --surface-sunk: #f4f3ef;
+  --rule: #c9c6bd;
+  --rule-strong: #8f8b82;
+  --rule-soft: #eceae4;
+
+  /* The marks. Lime is the highlighter: it marks the active thing, nothing
+   * else. Red is correction: errors and removal, never decoration. */
+  --mark: #d8f32b;
+  --mark-ink: #1b1b1b;
+  --correction: #c2291f;
+  --correction-soft: #fdeceb;
+  --verified: #1f7a3d;
+
+  /* The only elevation in the product, for the floating overlay card. */
+  --shadow-float: 0 18px 50px rgb(0 0 0 / 28%);
+
+  /* Shape. One system: 2px on inline marks, 4px on fields and buttons, 10px
+   * only on the container. No other radii exist. */
+  --radius-mark: 2px;
+  --radius-control: 4px;
+  --radius-container: 10px;
+
+  /* Spacing, on a 4px rhythm. */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 22px;
+  --s-6: 30px;
+  --s-7: 40px;
+
+  /* Motion. One authored curve, and a stepped variant for the pixel mascot. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-quick: 120ms;
+  --dur-base: 200ms;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark theme: ink ground, chalk text. The highlighter stays the same hue
+     * but drops in value so it does not glare against a dark field. */
+    --ink: #f2f1ec;
+    --ink-2: #b8b5ad;
+    --ink-3: #8b8880;
+    --ink-4: #8a877f;
+
+    --ground: #16150f;
+    --surface: #1e1d16;
+    --surface-sunk: #12110c;
+    --rule: #3a3830;
+    --rule-strong: #6c6960;
+    --rule-soft: #2a2822;
+
+    --mark: #cbe32c;
+    --mark-ink: #16150f;
+    --correction: #f0736a;
+    --correction-soft: #2b1a18;
+    --verified: #7fce9b;
+  }
+}
