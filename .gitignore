@@ -20,3 +20,8 @@ Desktop.ini
 
 # Scratch space for manual end-to-end runs
 /.e2e/
+/.scratch/
+
+# Design process artifacts (screenshots, decision payloads)
+/.impeccable/
+/.playwright-mcp/
