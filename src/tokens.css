@@ -55,8 +55,10 @@
   --correction-soft: #fdeceb;
   --verified: #1f7a3d;
 
-  /* The only elevation in the product, for the floating overlay card. */
-  --shadow-float: 0 18px 50px rgb(0 0 0 / 28%);
+  /* The only elevation in the product, for the waiting pill. It is deliberately
+   * tight: the window that carries it is transparent, and a wide blur would be
+   * cut flat by the window edge. */
+  --shadow-float: 0 2px 6px rgb(0 0 0 / 26%);
 
   /* Shape. One system: 2px on inline marks, 4px on fields and buttons, 10px
    * only on the container. No other radii exist. */
@@ -77,6 +79,9 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-quick: 120ms;
   --dur-base: 200ms;
+  /* The waiting pill is the only surface that loops. This is the rhythm of its
+   * bob and its blink, not a component duration, and nothing else uses it. */
+  --dur-loop: 1200ms;
 
   color-scheme: light dark;
 }

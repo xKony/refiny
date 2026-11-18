@@ -1,8 +1,14 @@
 /* The overlay window.
  *
- * Separate from the settings sheet because it is a separate surface: a small
- * floating card with the mascot. It spends the same tokens.
+ * A pill that sits beside the pointer for the length of one polish action. It
+ * spends the same tokens as the settings window, and it is the only place in
+ * the product that loops: a status cue that is waiting has to show that it is
+ * still moving.
  */
+
+* {
+  box-sizing: border-box;
+}
 
 html,
 body {
@@ -11,8 +17,11 @@ body {
 }
 
 body {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: flex-start;
+  /* The window is larger than the pill so the shadow has room to fall. The
+   * placement maths in `src-tauri/src/overlay.rs` assumes this margin. */
+  padding: var(--s-2);
   overflow: hidden;
   background: transparent;
   color: var(--ink);
@@ -22,72 +31,80 @@ body {
   cursor: default;
 }
 
-.mascot-card {
-  width: 204px;
-  padding: 18px 14px 14px;
-  border: 1px solid var(--rule-strong);
+.pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 44px;
+  max-width: 240px;
+  padding: 0 12px;
+  border: 1px solid var(--ink);
   border-radius: var(--radius-container);
   background: var(--surface);
   box-shadow: var(--shadow-float);
-  text-align: center;
-  transition: border-color var(--dur-base) var(--ease-out);
+  overflow: hidden;
 }
 
+/* The mascot is the art's own bounding box at 2x: 8 units wide, 12 tall on the
+ * 16-unit grid, cropped so the pill's padding is the only space beside it.
+ * `shape-rendering` keeps the edges on device pixels at fractional scaling
+ * instead of smearing them. */
 .mascot {
-  display: block;
-  width: 132px;
-  height: 132px;
-  margin: 0 auto;
+  flex: none;
+  width: 24px;
+  height: 28px;
 }
 
-.overlay-label {
-  margin: 6px 0 0;
-  color: var(--ink-3);
+.mascot-body {
+  fill: var(--ink);
+}
+
+.mascot-eye,
+.mascot-mouth {
+  fill: var(--surface);
+}
+
+.label {
+  width: fit-content;
+  max-width: 168px;
+  color: var(--ink-2);
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.mascot-card[data-state="working"] .mascot {
-  animation: bob 1.15s ease-in-out infinite;
+/* Working is the creature itself: it bobs on the spot and, every third loop,
+ * blinks. The eyes vanish into the body for a frame, which is what closed pixel
+ * eyes look like. Nothing else moves; a progress bar would promise a length
+ * this wait does not have. */
+.pill[data-state="working"] .mascot {
+  animation: bob var(--dur-loop) steps(2, end) infinite;
 }
 
-.mascot-card[data-state="working"] .ear-left {
-  animation: ear-left 1.15s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
+.pill[data-state="working"] .mascot-eye {
+  animation: blink calc(3 * var(--dur-loop)) linear infinite;
 }
 
-.mascot-card[data-state="working"] .ear-right {
-  animation: ear-right 1.15s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-
-.mascot-card[data-state="working"] .tongue {
-  animation: tongue 1.15s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-}
-
-.mascot-card[data-state="success"] {
+.pill[data-state="success"] {
   border-color: var(--verified);
 }
 
-.mascot-card[data-state="success"] .overlay-label {
+.pill[data-state="success"] .label {
   color: var(--verified);
 }
 
-.mascot-card[data-state="error"] {
+.pill[data-state="error"] {
   border-color: var(--correction);
 }
 
-.mascot-card[data-state="error"] .overlay-label {
+.pill[data-state="error"] .label {
   color: var(--correction);
-}
-
-.mascot-card[data-state="error"] .mascot {
-  animation: tilt 380ms var(--ease-out);
 }
 
 @keyframes bob {
@@ -96,59 +113,28 @@ body {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-7px);
+    transform: translateY(-2px);
   }
 }
 
-@keyframes ear-left {
+@keyframes blink {
   0%,
+  91%,
   100% {
-    transform: rotate(0deg);
+    opacity: 1;
   }
-  50% {
-    transform: rotate(-4deg);
-  }
-}
-
-@keyframes ear-right {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(4deg);
-  }
-}
-
-@keyframes tongue {
-  0%,
-  100% {
-    transform: scaleY(1);
-  }
-  50% {
-    transform: scaleY(0.82);
-  }
-}
-
-@keyframes tilt {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  30% {
-    transform: rotate(-5deg);
-  }
-  70% {
-    transform: rotate(4deg);
+  92%,
+  96% {
+    opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mascot-card,
-  .mascot,
-  .ear,
-  .tongue {
-    animation: none !important;
-    transition: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

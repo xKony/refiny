@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
+use crate::overlay;
 use crate::state::AppState;
 use crate::tray;
 
@@ -331,10 +332,13 @@ pub fn handle_hotkey(app: &tauri::AppHandle) {
 
     std::thread::spawn(move || {
         let mut report = |event: StateEvent| {
-            if matches!(event.state, State::Working | State::Success | State::Error) {
-                show_overlay(&app);
-            }
+            let visible = matches!(event.state, State::Working | State::Success | State::Error);
+            // The overlay learns the state before it is shown, so its first
+            // frame is this action instead of the last one.
             let _ = app.emit("refiny-state", event);
+            if visible {
+                overlay::show(&app);
+            }
         };
 
         // A press while polishing is ignored rather than reported: the user is
@@ -353,10 +357,4 @@ pub fn switch_preset(app: &tauri::AppHandle, name: &str) -> Result<(), String> {
     let _ = app.emit("refiny-config-changed", ());
     let _ = tray::refresh(app);
     Ok(())
-}
-
-fn show_overlay(app: &tauri::AppHandle) {
-    if let Some(overlay) = app.get_webview_window("overlay") {
-        let _ = overlay.show();
-    }
 }

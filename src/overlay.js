@@ -2,12 +2,12 @@ const tauri = window.__TAURI__;
 const invoke = tauri?.core?.invoke;
 const listen = tauri?.event?.listen;
 
-const card = document.querySelector("#card");
+const pill = document.querySelector("#pill");
 const label = document.querySelector("#label");
 let hideTimer;
 
 function setState(state, message) {
-  card.dataset.state = state;
+  pill.dataset.state = state;
   label.textContent = message;
 
   clearTimeout(hideTimer);
@@ -21,4 +21,4 @@ listen?.("refiny-state", (event) => {
   setState(payload.state ?? "error", payload.message ?? "");
 });
 
-setState("working", "polishing…");
+setState("working", "Polishing…");

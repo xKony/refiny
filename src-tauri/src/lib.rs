@@ -1,5 +1,6 @@
 mod commands;
 mod keychain;
+mod overlay;
 mod selection;
 mod state;
 mod tray;
@@ -73,6 +74,12 @@ pub fn run() {
 
             for window_config in app.config().app.windows.clone() {
                 tauri::WebviewWindowBuilder::from_config(app.handle(), &window_config)?.build()?;
+            }
+
+            // The pill is a cue, not a target. Clicks belong to the application
+            // the user is writing in, not to a window they never aimed at.
+            if let Some(overlay) = app.get_webview_window("overlay") {
+                overlay.set_ignore_cursor_events(true)?;
             }
 
             tray::build(app.handle())?;
