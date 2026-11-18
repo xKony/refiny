@@ -84,6 +84,7 @@ The frontend is embedded at build time, so `cargo run -p refiny` also launches t
 - `src-tauri` - the Tauri shell: hotkey, tray, windows, commands, and the two implementations of the OS seams (`selection.rs` for the clipboard round trip, `keychain.rs` for the credential store).
 - `src` - settings and overlay UI, plain HTML, CSS, and JS embedded at build time.
 - `docs` - the whitepaper, the architecture reference, the ADRs, and agent instructions.
+- `DESIGN.md` - the design system: tokens, type, components, and how screenshots are reviewed without burning the agent's context.
 
 [docs/architecture.md](docs/architecture.md#workspace-layout) has the per-file table.
 
@@ -91,8 +92,9 @@ The frontend is embedded at build time, so `cargo run -p refiny` also launches t
 
 There is no dated plan and no milestone list. GitHub issues are the only record of intended work.
 
-- Working, on Windows: hotkey, selection capture and replace, overlay, tray lifecycle, and the whole settings window - provider form with presets and a connection test, OS keychain for the key, hotkey changes without a restart, named prompt presets switchable from the tray, and the playground.
-- Open, unscheduled: [issue #11](https://github.com/xKony/refiny/issues/11) explores replacing the four hand-written provider presets with the models.dev catalog.
+- Working, on Windows: hotkey, selection capture and replace, overlay, tray, and a complete settings window - provider form with presets and a connection test, OS keychain for the key, hotkey changes without a restart, named prompt presets switchable from the tray, and the playground. The window is drawn in the Marginalia system recorded in [DESIGN.md](DESIGN.md).
+- Open: [issue #13](https://github.com/xKony/refiny/issues/13) replaces the overlay card with a small pill that follows the cursor and carries a pixel mascot. [issue #11](https://github.com/xKony/refiny/issues/11) explores replacing the hand-written provider presets with the models.dev catalog.
+- Known failure: [issue #14](https://github.com/xKony/refiny/issues/14) stops the app starting on the author's Windows machine because the WebView2 webview fails to create. The interface work above was checked in a browser against the same HTML, CSS, and JavaScript until that is fixed.
 - Not scheduled: runtime verification on macOS or Linux, Wayland support, streaming, cancel, history, per-app profiles, packaging, installers, code signing, and auto-update. None of these has an owner or a date.
 
 ## Contributing
